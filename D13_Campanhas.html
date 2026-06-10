@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sebrae BI — Campanhas</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="_shared/design-system.css">
+<style>
+.tbl-scroll { max-height: 270px; overflow-y: auto; overflow-x: auto; }
+.tbl-scroll table thead { position: sticky; top: 0; z-index: 1; background: var(--white); }
+.tbl-scroll table thead::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; border-bottom: 2px solid var(--gray-20); }
+.tbl-wrap { overflow-x: auto; font-size: var(--fs-sm); }
+.tbl-wrap table { width: 100%; border-collapse: collapse; }
+.tbl-wrap th { font-size: var(--fs-xs); color: var(--gray-50); text-transform: uppercase; letter-spacing: .3px; padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--gray-20); font-weight: 600; cursor: pointer; user-select: none; }
+.tbl-wrap th:hover { color: var(--blue-60); }
+.tbl-wrap td { padding: 8px 10px; border-bottom: 1px solid var(--gray-10); color: var(--gray-70); }
+.tbl-wrap .sort-indicator { font-size: 9px; margin-left: 4px; color: var(--gray-40); }
+.tbl-wrap .overlap-high { color: var(--red); font-weight: 600; }
+.status-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: var(--fs-xs); font-weight: 600; }
+.status-concluida { background: #E8F5E9; color: #2E7D32; }
+.status-em-envio { background: var(--blue-10); color: var(--blue-60); }
+.status-erro { background: #FFEBEE; color: #C62828; }
+.status-planejada { background: #F5F5F5; color: var(--gray-60); }
+.quad-verde { color: var(--green); font-weight: 600; }
+.quad-azul { color: var(--blue-60); font-weight: 600; }
+.quad-vermelho { color: var(--red); font-weight: 600; }
+.quad-amarelo { color: #E67E00; font-weight: 600; }
+.filtros-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 16px; background: var(--white); border: 1px solid var(--gray-20); border-radius: var(--radius-md); margin-bottom: 20px; align-items: center; }
+.filtros-bar .filtro-label { font-size: var(--fs-xs); font-weight: 600; color: var(--gray-50); text-transform: uppercase; letter-spacing: .5px; }
+.filtros-bar select { padding: 6px 10px; border: 1px solid var(--gray-20); border-radius: 6px; font-size: var(--fs-sm); background: white; color: var(--gray-60); }
+.quadrant-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: var(--fs-xs); }
+.quadrant-legend span { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 4px; background: var(--white); border: 1px solid var(--gray-20); }
+.btn-csv { padding: 6px 12px; background: var(--white); border: 1px solid var(--gray-20); border-radius: var(--radius-sm); font-size: var(--fs-xs); cursor: pointer; color: var(--gray-60); }
+.btn-csv:hover { background: var(--gray-10); color: var(--gray-80); }
+.rgy-green { color: #2E7D32; font-weight: 700; }
+.rgy-yellow { color: #E67E00; font-weight: 700; }
+.rgy-red { color: #C62828; font-weight: 700; }
+.tbl-uf { max-height: 300px; overflow-y: auto; }
+.tbl-uf table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.tbl-uf th { font-size: var(--fs-xs); color: var(--gray-50); text-transform: uppercase; letter-spacing: .3px; padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--gray-20); font-weight: 600; }
+.tbl-uf td { padding: 8px 10px; border-bottom: 1px solid var(--gray-10); color: var(--gray-70); }
+.tbl-uf tr:hover td { background: var(--gray-05); }
+.tbl-uf .rank-col { color: var(--gray-50); font-size: var(--fs-xs); width: 24px; }
+.tbl-uf .uf-col { font-weight: 600; color: var(--gray-80); }
+.tbl-uf .camp-count { font-size: var(--fs-xs); color: var(--gray-50); }
+.story-callout { background: var(--blue-05); border-left: 3px solid var(--blue-60); padding: 12px 16px; margin: 24px 0; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: var(--fs-sm); color: var(--gray-60); line-height: 1.5; }
+.story-callout strong { color: var(--gray-80); }
+.hierarchy-tag { font-size: 9px; padding: 2px 6px; border-radius: 3px; background: var(--gray-10); color: var(--gray-50); font-weight: 500; }
+.hierarchy-tag.mae { background: var(--blue-10); color: #0060DF; }
+.objetivo-tag { font-size: 9px; padding: 2px 6px; border-radius: 3px; background: var(--gray-10); color: var(--gray-50); }
+.chart-legend-inline { display: flex; gap: 16px; justify-content: center; font-size: var(--fs-xs); color: var(--gray-60); margin-bottom: 8px; }
+.chart-legend-inline span { display: flex; align-items: center; gap: 4px; }
+.kpi-card .kpi-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.kpi-card .value-row { display: flex; align-items: center; gap: 8px; }
+.kpi-card .kpi-badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 600; display: inline-block; }
+.kpi-badge-green { background: #E8F5E9; color: #2E7D32; }
+.kpi-badge-red { background: #FFEBEE; color: #C62828; }
+.kpi-badge-amber { background: #FFF8E1; color: #E67E00; }
+.kpi-badge-blue { background: var(--blue-10); color: #0060DF; }
+.mini-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; padding: 4px 0; }
+.mini-card { background: var(--white); border: 1px solid var(--gray-20); border-radius: var(--radius-sm); padding: 14px 16px; text-align: center; }
+.mini-card .mini-label { font-size: var(--fs-xs); color: var(--gray-50); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.mini-card .mini-value { font-size: var(--fs-xl); font-weight: 700; color: var(--gray-80); }
+.mini-card .mini-sub { font-size: 10px; color: var(--gray-50); margin-top: 2px; }
+.mini-card.isc-high .mini-value { color: var(--green); }
+.mini-card.isc-low .mini-value { color: var(--red); }
+.mini-card.cpl-low .mini-value { color: var(--green); }
+.mini-card.cpl-high .mini-value { color: var(--red); }
+.treemap-legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: var(--fs-xs); color: var(--gray-60); margin-bottom: 8px; justify-content: center; }
+.treemap-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.treemap-legend .legend-dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.overlap-critical { color: #C62828 !important; font-weight: 700; }
+.overlap-warning { color: #E67E00 !important; font-weight: 600; }
+.overlap-healthy { color: #2E7D32 !important; }
+</style>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">S</div>
+    <h1>Sebrae BI</h1>
+    <span class="badge">TO-BE</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="Home.html">
+      <span class="icon" data-lucide="layout-dashboard"></span>
+      Home
+    </a>
+    <a class="nav-item" href="D10-D12_executive.html">
+      <span class="icon" data-lucide="bar-chart-3"></span>
+      Painel Estratégico
+    </a>
+    <a class="nav-item" href="DC_Contratos.html">
+      <span class="icon" data-lucide="file-text"></span>
+      Dash Contratos
+    </a>
+    <a class="nav-item" href="Base_de_Leads.html">
+      <span class="icon" data-lucide="route"></span>
+      Base de Leads
+    </a>
+    <a class="nav-item active" href="D13_Campanhas.html">
+      <span class="icon" data-lucide="megaphone"></span>
+      Campanhas
+    </a>
+    <a class="nav-item" href="D9_Performance.html">
+      <span class="icon" data-lucide="layers"></span>
+      Performance Multicanal
+    </a>
+  </nav>
+</aside>
+
+<div class="main">
+  <header class="header">
+    <div class="header-left">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <span data-lucide="menu" style="width:22px;height:22px;"></span>
+      </button>
+      <span class="breadcrumb">Sebrae BI / <strong id="pageTitle">Campanhas</strong></span>
+    </div>
+    <div class="header-right">
+      <span class="phase">v2.0 — Overlap</span>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page-header">
+      <h2>Campanhas</h2>
+      <p>Análise granular de performance por campanha, matriz ISC x Investimento com overlay de overlap</p>
+    </div>
+
+    <div id="sec-panorama" class="act-divider">
+      <span class="act-title">Panorama de Campanhas</span>
+      <span class="act-subtitle">Ranking, performance geral e tendência temporal do overlap</span>
+    </div>
+
+    <div class="accordion-story">
+      <div class="accordion-story-header collapsed" onclick="toggleAccordion(this)">
+        <span>Por que isso importa?</span>
+        <span class="toggle-icon" data-lucide="chevron-down"></span>
+      </div>
+      <div class="accordion-story-body collapsed">
+        <p>Esta seção estabelece o cenário macro: quantas campanhas estão ativas, qual o ISC médio, TOO% médio e como o overlap evoluiu nos últimos meses. O ranking unificado mostra todas as campanhas ordenadas por ISC com perfil, TOO% e overlap — ponto de partida para investigação. Pela primeira vez, o dashboard revela o <strong>objetivo</strong> de cada campanha (Apresentar Solução, Incentivar Especialização, Regularização, Crédito) e o <strong>overlap</strong> — quantos % dos leads desta campanha também estão em outras campanhas ativas.</p>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="label">Campanhas Ativas</div>
+        <div class="value"><span class="kpi-indicator" style="background:#0060DF;"></span>16</div>
+        <div class="sub">Total de campanhas em andamento ou concluídas no período</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">ISC Médio</div>
+        <div class="value"><span class="kpi-indicator" style="background:#2E7D32;"></span>2,9</div>
+        <div class="change neutral">(escala 0–6)</div>
+        <div class="sub">Índice de Sucesso de Campanha — acima da média do ecossistema</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Overlap Médio</div>
+        <div class="value"><span class="kpi-indicator" style="background:#E67E00;"></span>34%</div>
+        <div class="change up"><span class="trend-icon">&#9650;</span>+5 p.p. vs trim. ant.</div>
+        <div class="sub">% médio de leads compartilhados — em zona de atenção (&gt;30%)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Investimento Total</div>
+        <div class="value"><span class="kpi-indicator" style="background:var(--gray-50);"></span>R$ 81,4K</div>
+        <div class="sub">Soma de todos os investimentos no período</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">TOO% Médio</div>
+        <div class="value"><span class="kpi-indicator" style="background:#E67E00;"></span>0,58%</div>
+        <div class="change down"><span class="trend-icon">&#9660;</span>-0,12 p.p. vs trim. ant.</div>
+        <div class="sub">Taxa de Opt-Out média — abaixo de 1% e em queda</div>
+      </div>
+    </div>
+
+    <div class="filtros-bar">
+      <span class="filtro-label">Filtros</span>
+      <select><option>Jan-Jun 2026</option><option>Jul-Dez 2026</option><option>2025</option></select>
+      <select><option>Objetivo (todos)</option><option>Apresentar Solução</option><option>Incentivar Especialização</option><option>Regularização</option><option>Crédito</option></select>
+      <select><option>Todos Canais</option><option>SMS</option><option>Email</option><option>WhatsApp</option></select>
+      <select><option>Todas UFs</option></select>
+      <select><option>Todos Perfis</option></select>
+      <select><option>Todos Produtos</option></select>
+      <select><option>Todos Status</option><option>Planejada</option><option>Em Envio</option><option>Concluida</option><option>Erro</option></select>
+    </div>
+
+    <div class="row col-1">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Evolução Overlap x Volume de Campanhas</span>
+        </div>
+        <div id="chart-evolution" class="chart-container-lg" style="height:300px;"></div>
+      </div>
+    </div>
+
+    <div class="row col-1">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Ranking de Campanhas (por ISC)</span>
+          <button class="btn-csv" onclick="exportCSV('ranking-table')">CSV</button>
+        </div>
+        <div class="tbl-wrap tbl-scroll">
+          <table id="ranking-table" class="data-table sortable">
+            <thead>
+              <tr>
+                <th onclick="sortTable('ranking-table', 0)"># <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('ranking-table', 1)">Nome <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('ranking-table', 2)">Objetivo <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('ranking-table', 3)">Hier. <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('ranking-table', 4)">Canal <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('ranking-table', 5)">UF <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('ranking-table', 6)">Perfil <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('ranking-table', 7)">ISC <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('ranking-table', 8)">CTR <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('ranking-table', 9)">Leads <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('ranking-table', 10)">Overlap% <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('ranking-table', 11)">TOO% <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('ranking-table', 12)">Invest. <span class="sort-indicator">&#9650;</span></th>
+              </tr>
+            </thead>
+            <tbody id="ranking-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="story-callout">
+      <strong>Insight:</strong> A correlação entre número de campanhas ativas e overlap médio é positiva: a cada 5 novas campanhas, o overlap sobe ~8 p.p. Campanhas com objetivo <strong>Crédito</strong> têm ISC médio 30% maior, mas overlap médio de 42% — a base de crédito está intensamente disputada.
+    </div>
+
+    <div id="sec-risco" class="act-divider" style="margin-top:48px;">
+      <span class="act-title">Risco de Sobreposição</span>
+      <span class="act-subtitle">Onde o overlap é crítico, sobreposição por perfil, opt-out e distribuição por objetivo</span>
+    </div>
+
+    <div class="accordion-story">
+      <div class="accordion-story-header collapsed" onclick="toggleAccordion(this)">
+        <span>Por que isso importa?</span>
+        <span class="toggle-icon" data-lucide="chevron-down"></span>
+      </div>
+      <div class="accordion-story-body collapsed">
+        <p>Esta seção mergulha no <strong>overlap como risco</strong>. O radar ISC x Overlap por Perfil revela quais segmentos sofrem mais canibalização. O treemap mostra, numa só olhadela, quais campanhas combinam alto overlap com baixo ISC (tiles grandes + vermelhos) — prioridade para revisão. O scatter Overlap x TOO% testa se audiências sobrepostas geram descadastro. Os donuts de Status e Objetivo contextualizam a composição da carteira.</p>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="label">Overlap Crítico</div>
+        <div class="value"><span class="kpi-indicator" style="background:#C62828;"></span>3</div>
+        <div class="change up"><span class="trend-icon">&#9650;</span>+1 vs trim. ant.</div>
+        <div class="sub" style="color:#C62828;">Campanhas com overlap &gt; 60% — risco de canibalização</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Overlap Médio</div>
+        <div class="value"><span class="kpi-indicator" style="background:#E67E00;"></span>34%</div>
+        <div class="sub" style="color:#E67E00;">Em zona de atenção (&gt;30%) — +5 p.p. vs trim. ant.</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Perfil Mais Sobreposto</div>
+        <div class="value"><span class="kpi-indicator" style="background:#C62828;"></span>Informal</div>
+        <div class="sub">47% dos leads deste perfil estão em multiplas campanhas</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Camp. c/ Overlap Alto</div>
+        <div class="value"><span class="kpi-indicator" style="background:#E67E00;"></span>8</div>
+        <div class="sub">Campanhas com overlap &gt; 30% (moderado + crítico)</div>
+      </div>
+    </div>
+
+    <div class="filtros-bar">
+      <span class="filtro-label">Filtros</span>
+      <select><option>Jan-Jun 2026</option><option>Jul-Dez 2026</option><option>2025</option></select>
+      <select><option>Objetivo (todos)</option><option>Apresentar Solução</option><option>Incentivar Especialização</option><option>Regularização</option><option>Crédito</option></select>
+      <select><option>Todos Canais</option><option>SMS</option><option>Email</option><option>WhatsApp</option></select>
+      <select><option>Todos Perfis</option></select>
+    </div>
+
+    <div class="row col-3">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Distribuição por Status</span>
+        </div>
+        <div id="chart-status" class="chart-container-sm" style="height:280px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Distribuição por Objetivo</span>
+        </div>
+        <div id="chart-objetivo" class="chart-container-sm" style="height:280px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Radar ISC x Overlap por Perfil</span>
+        </div>
+        <div id="chart-radar-perfil" class="chart-container" style="height:280px;"></div>
+      </div>
+    </div>
+
+    <div class="row col-1">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Treemap — Overlap% (tamanho) x ISC (cor)</span>
+        </div>
+        <div class="treemap-legend">
+          <span><span class="legend-dot" style="background:#2E7D32;"></span> ISC alto (&gt;4)</span>
+          <span><span class="legend-dot" style="background:#0060DF;"></span> ISC médio (1-4)</span>
+          <span><span class="legend-dot" style="background:#E67E00;"></span> ISC baixo (&gt;0-1)</span>
+          <span><span class="legend-dot" style="background:#C62828;"></span> ISC nulo (0)</span>
+          <span style="margin-left:8px;">Tamanho do tile = % de overlap</span>
+        </div>
+        <div id="chart-treemap-overlap" class="chart-container-lg" style="height:380px;"></div>
+      </div>
+    </div>
+
+    <div class="row col-1">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Correlação Overlap x Taxa de Opt-Out (TOO)</span>
+          <span class="card-desc">Bolha = volume de envios | Cor = canal</span>
+        </div>
+        <div id="chart-scatter-overlap-optout" class="chart-container-lg" style="height:360px;"></div>
+      </div>
+    </div>
+
+    <div class="story-callout">
+      <strong>Insight:</strong> O perfil <strong>Informal</strong> sofre o maior overlap (47%) com o menor ISC (1,5) — este segmento está saturado. No treemap, campanhas como <strong>Disparo Recuperação</strong> (overlap 55%, ISC 1,8) e <strong>Crédito Nordeste</strong> (52%, ISC 3,8) são tiles grandes e devem ser priorizadas para revisão de audiência. A correlação entre overlap e opt-out no scatter acima mostra se audiências sobrepostas geram descadastro.
+    </div>
+
+    <div id="sec-segmento" class="act-divider" style="margin-top:48px;">
+      <span class="act-title">Performance por Segmento</span>
+      <span class="act-subtitle">Eficiência por canal, desempenho geográfico e matriz de decisão</span>
+    </div>
+
+    <div class="accordion-story">
+      <div class="accordion-story-header collapsed" onclick="toggleAccordion(this)">
+        <span>Por que isso importa?</span>
+        <span class="toggle-icon" data-lucide="chevron-down"></span>
+      </div>
+      <div class="accordion-story-body collapsed">
+        <p>Esta seção fecha a análise com a comparação de ISC, CPL e TOO% por canal — mostrando qual canal entrega melhor custo-benefício e menor taxa de descadastro. O mapa de ISC por UF revela disparidades regionais. A matriz ISC x Investimento (com bolha = overlap%) consolida a decisão: onde cortar, onde investir mais. A tabela detalhada permite exportar todos os dados para análise offline.</p>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="label">ISC MEI</div>
+        <div class="value"><span class="kpi-indicator" style="background:#2E7D32;"></span>3,1</div>
+        <div class="sub">Média entre campanhas para MEI — acima da média geral</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">CPL Geral</div>
+        <div class="value"><span class="kpi-indicator" style="background:#E67E00;"></span>R$ 3,70</div>
+        <div class="sub">Custo por Lead médio — maior em campanhas de Crédito</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">ROI Médio</div>
+        <div class="value"><span class="kpi-indicator" style="background:#2E7D32;"></span>187%</div>
+        <div class="change up"><span class="trend-icon">&#9650;</span>+23 p.p. vs trim. ant.</div>
+        <div class="sub">Retorno sobre investimento estimado</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Diferencial ISC-CPL</div>
+        <div class="value"><span class="kpi-indicator" style="background:#0060DF;"></span>+1,8</div>
+        <div class="sub">Email lidera em relação ISC/CPL; SMS tem pior relação</div>
+      </div>
+    </div>
+
+    <div class="filtros-bar">
+      <span class="filtro-label">Filtros</span>
+      <select><option>Jan-Jun 2026</option><option>Jul-Dez 2026</option><option>2025</option></select>
+      <select><option>Todos Canais</option><option>SMS</option><option>Email</option><option>WhatsApp</option></select>
+      <select><option>Todas UFs</option></select>
+      <select><option>Todos Perfis</option></select>
+      <select><option>Todos Produtos</option></select>
+    </div>
+
+    <div class="row col-2">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">ISC vs CPL por Canal</span>
+        </div>
+        <div id="mini-cards-isc-cpl" style="padding:8px;">
+          <div class="mini-card-grid" id="miniCardsContainer"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">ISC por UF</span>
+        </div>
+        <div class="tbl-uf" id="isc-uf-table-container"></div>
+      </div>
+    </div>
+
+    <div class="row col-1">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Matriz ISC x Investimento — área = investimento | cor = ISC</span>
+          <span class="card-desc">Tile maior = mais investimento | Verde = ISC alto | Laranja/Vermelho = baixo ISC</span>
+        </div>
+        <div class="treemap-legend">
+          <span><span class="legend-dot" style="background:#2E7D32;"></span> Super Performático (ISC ≥ 4)</span>
+          <span><span class="legend-dot" style="background:#0060DF;"></span> Eficiente (ISC 1-4)</span>
+          <span><span class="legend-dot" style="background:#E67E00;"></span> Alto Investimento (ISC ≥ 1, Inv > R$ 5K)</span>
+          <span><span class="legend-dot" style="background:#C62828;"></span> A Investigar (ISC < 1)</span>
+          <span style="margin-left:8px;">Opacidade = % Overlap</span>
+        </div>
+        <div id="chart-scatter-isc" class="chart-container-lg" style="height:380px;"></div>
+      </div>
+    </div>
+
+    <div class="row col-1">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Tabela Detalhada</span>
+          <button class="btn-csv" onclick="exportCSV('detalhada-table')">CSV</button>
+        </div>
+        <div class="tbl-wrap tbl-scroll">
+          <table id="detalhada-table" class="data-table sortable">
+            <thead>
+              <tr>
+                <th onclick="sortTable('detalhada-table', 0)">Campanha <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 1)">Classificação <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 2)">Objetivo <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 3)">Perfil <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 4)">UF <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 5)">Envio <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 6)">Entregues <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 7)">Aberturas <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 8)">%Abert. <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 9)">Opt-Outs <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 10)">TOO% <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 11)">ISC <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 12)">CTR <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 13)">Conv. <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 14)">Leads <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 15)">CPL <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 16)">Overlap% <span class="sort-indicator">&#9650;</span></th>
+                <th onclick="sortTable('detalhada-table', 17)">Status <span class="sort-indicator">&#9650;</span></th>
+              </tr>
+            </thead>
+            <tbody id="detalhada-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="story-callout">
+      <strong>Insight:</strong> <strong>Email</strong> é o canal com melhor relação ISC/CPL (ISC 3,1 — CPL R$ 2,80). <strong>SMS</strong>, apesar do baixo CPL (R$ 1,80), entrega ISC mediano (1,7) — deve ser usado como complemento, não como canal principal. Na matriz de decisão, 2 campanhas são Super Performáticas; 2 estão na zona "A Investigar".
+    </div>
+
+  </div>
+</div>
+
+<script>
+lucide.createIcons();
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+function toggleAccordion(el) {
+  el.classList.toggle('collapsed');
+  var body = el.nextElementSibling;
+  body.classList.toggle('collapsed');
+}
+
+var objetivos = ['Apresentar Solução','Incentivar Especialização','Regularização','Crédito'];
+var perfis = ['MEI','EPP','ME','Informal','Produtor Rural'];
+var produtos = ['Crédito','Consultoria','Capacitacao','Cursos','Solucoes Digitais','Estruturantes'];
+
+var campanhas = [
+  {nome:'Crédito Expansao SP', objetivo:'Crédito', hierarquia:'Mae', parent_nome:null, canal:'WhatsApp', perfil:'ME', produto:'Crédito', uf:'SP', status:'Concluida', envios:185000, entregues:179450, aberturas:116643, optouts:538, isc:4.8, ctr:8.2, conversao:3.5, invest:12000, leads:4250, overlap_pct:38},
+  {nome:'Disparo SP V1', objetivo:'Crédito', hierarquia:'Disparo', parent_nome:'Crédito Expansao SP', canal:'WhatsApp', perfil:'ME', produto:'Crédito', uf:'SP', status:'Concluida', envios:95000, entregues:92150, aberturas:59898, optouts:276, isc:4.6, ctr:7.9, conversao:3.3, invest:6500, leads:2100, overlap_pct:35},
+  {nome:'Disparo SP V2', objetivo:'Crédito', hierarquia:'Disparo', parent_nome:'Crédito Expansao SP', canal:'WhatsApp', perfil:'ME', produto:'Crédito', uf:'SP', status:'Concluida', envios:90000, entregues:87300, aberturas:56745, optouts:262, isc:4.5, ctr:8.0, conversao:3.1, invest:5500, leads:2150, overlap_pct:42},
+  {nome:'Consultoria ME', objetivo:'Apresentar Solução', hierarquia:'Mae', parent_nome:null, canal:'Email', perfil:'MEI', produto:'Consultoria', uf:'MG', status:'Concluida', envios:95000, entregues:92150, aberturas:46075, optouts:645, isc:4.2, ctr:6.5, conversao:2.8, invest:4800, leads:1850, overlap_pct:22},
+  {nome:'Capacitacao Rural', objetivo:'Incentivar Especialização', hierarquia:'Mae', parent_nome:null, canal:'WhatsApp', perfil:'Produtor Rural', produto:'Capacitacao', uf:'RS', status:'Em Envio', envios:42000, entregues:40740, aberturas:26481, optouts:122, isc:3.5, ctr:5.8, conversao:2.1, invest:3200, leads:980, overlap_pct:45},
+  {nome:'Cursos EAD Nordeste', objetivo:'Incentivar Especialização', hierarquia:'Mae', parent_nome:null, canal:'Email', perfil:'EPP', produto:'Cursos', uf:'BA', status:'Concluida', envios:78000, entregues:75660, aberturas:37830, optouts:530, isc:2.0, ctr:3.2, conversao:1.1, invest:1500, leads:520, overlap_pct:18},
+  {nome:'Solucoes Digitais RJ', objetivo:'Apresentar Solução', hierarquia:'Mae', parent_nome:null, canal:'SMS', perfil:'ME', produto:'Solucoes Digitais', uf:'RJ', status:'Erro', envios:12000, entregues:11640, aberturas:0, optouts:175, isc:0.8, ctr:1.2, conversao:0.3, invest:2800, leads:85, overlap_pct:15},
+  {nome:'Crédito Nordeste', objetivo:'Crédito', hierarquia:'Mae', parent_nome:null, canal:'WhatsApp', perfil:'Informal', produto:'Crédito', uf:'PE', status:'Concluida', envios:62000, entregues:60140, aberturas:39091, optouts:180, isc:3.8, ctr:7.1, conversao:2.9, invest:8500, leads:2100, overlap_pct:52},
+  {nome:'Estruturantes Gov', objetivo:'Regularização', hierarquia:'Mae', parent_nome:null, canal:'Email', perfil:'ME', produto:'Estruturantes', uf:'DF', status:'Planejada', envios:8000, entregues:7760, aberturas:3880, optouts:54, isc:1.2, ctr:2.5, conversao:0.8, invest:9800, leads:120, overlap_pct:0},
+  {nome:'Consultoria EPP SP', objetivo:'Apresentar Solução', hierarquia:'Mae', parent_nome:null, canal:'WhatsApp', perfil:'EPP', produto:'Consultoria', uf:'SP', status:'Concluida', envios:142000, entregues:137740, aberturas:89531, optouts:413, isc:4.5, ctr:7.8, conversao:3.2, invest:6800, leads:3200, overlap_pct:30},
+  {nome:'Capacitacao SC', objetivo:'Incentivar Especialização', hierarquia:'Mae', parent_nome:null, canal:'Email', perfil:'MEI', produto:'Capacitacao', uf:'SC', status:'Em Envio', envios:35000, entregues:33950, aberturas:16975, optouts:238, isc:2.8, ctr:4.5, conversao:1.5, invest:2100, leads:680, overlap_pct:25},
+  {nome:'Crédito Produtor PR', objetivo:'Crédito', hierarquia:'Mae', parent_nome:null, canal:'WhatsApp', perfil:'Produtor Rural', produto:'Crédito', uf:'PR', status:'Concluida', envios:28000, entregues:27160, aberturas:17654, optouts:81, isc:4.0, ctr:6.9, conversao:2.6, invest:4500, leads:1520, overlap_pct:48},
+  {nome:'Cursos Online MT', objetivo:'Incentivar Especialização', hierarquia:'Mae', parent_nome:null, canal:'SMS', perfil:'Informal', produto:'Cursos', uf:'MT', status:'Concluida', envios:15000, entregues:14550, aberturas:0, optouts:218, isc:1.5, ctr:2.8, conversao:0.9, invest:850, leads:180, overlap_pct:22},
+  {nome:'Solucoes Digitais CE', objetivo:'Apresentar Solução', hierarquia:'Mae', parent_nome:null, canal:'WhatsApp', perfil:'MEI', produto:'Solucoes Digitais', uf:'CE', status:'Em Envio', envios:22000, entregues:21340, aberturas:13871, optouts:64, isc:2.2, ctr:4.0, conversao:1.2, invest:1800, leads:380, overlap_pct:20},
+  {nome:'Disparo CE Digital V1', objetivo:'Apresentar Solução', hierarquia:'Disparo', parent_nome:'Solucoes Digitais CE', canal:'WhatsApp', perfil:'MEI', produto:'Solucoes Digitais', uf:'CE', status:'Em Envio', envios:12000, entregues:11640, aberturas:7566, optouts:35, isc:2.0, ctr:3.8, conversao:1.1, invest:900, leads:200, overlap_pct:18},
+  {nome:'Consultoria Agro GO', objetivo:'Apresentar Solução', hierarquia:'Mae', parent_nome:null, canal:'Email', perfil:'Produtor Rural', produto:'Consultoria', uf:'GO', status:'Concluida', envios:18000, entregues:17460, aberturas:8730, optouts:122, isc:3.0, ctr:5.2, conversao:1.8, invest:3500, leads:420, overlap_pct:42},
+  {nome:'Crédito AM', objetivo:'Crédito', hierarquia:'Mae', parent_nome:null, canal:'WhatsApp', perfil:'ME', produto:'Crédito', uf:'AM', status:'Erro', envios:14000, entregues:13580, aberturas:8827, optouts:41, isc:0.9, ctr:1.5, conversao:0.4, invest:6200, leads:65, overlap_pct:10},
+  {nome:'Disparo Recuperação', objetivo:'Regularização', hierarquia:'Mae', parent_nome:null, canal:'SMS', perfil:'Informal', produto:'Estruturantes', uf:'SP', status:'Em Envio', envios:32000, entregues:31040, aberturas:0, optouts:466, isc:1.8, ctr:3.0, conversao:1.0, invest:1600, leads:280, overlap_pct:55},
+  {nome:'Capacitacao Digital', objetivo:'Incentivar Especialização', hierarquia:'Mae', parent_nome:null, canal:'Email', perfil:'EPP', produto:'Capacitacao', uf:'SP', status:'Concluida', envios:68000, entregues:65960, aberturas:32980, optouts:462, isc:3.2, ctr:5.5, conversao:2.0, invest:4200, leads:1250, overlap_pct:28},
+  {nome:'Crédito Informal BA', objetivo:'Crédito', hierarquia:'Mae', parent_nome:null, canal:'SMS', perfil:'Informal', produto:'Crédito', uf:'BA', status:'Planejada', envios:0, entregues:0, aberturas:0, optouts:0, isc:0, ctr:0, conversao:0, invest:0, leads:0, overlap_pct:0},
+  {nome:'Cursos Profissionalizantes', objetivo:'Incentivar Especialização', hierarquia:'Mae', parent_nome:null, canal:'WhatsApp', perfil:'MEI', produto:'Cursos', uf:'MG', status:'Concluida', envios:52000, entregues:50440, aberturas:32786, optouts:151, isc:2.5, ctr:4.2, conversao:1.4, invest:2200, leads:680, overlap_pct:15},
+  {nome:'Estruturantes PA', objetivo:'Regularização', hierarquia:'Mae', parent_nome:null, canal:'Email', perfil:'EPP', produto:'Estruturantes', uf:'PA', status:'Em Envio', envios:9500, entregues:9215, aberturas:4608, optouts:65, isc:1.0, ctr:2.0, conversao:0.6, invest:7500, leads:95, overlap_pct:20},
+  {nome:'Consultoria Digital RS', objetivo:'Apresentar Solução', hierarquia:'Mae', parent_nome:null, canal:'WhatsApp', perfil:'ME', produto:'Consultoria', uf:'RS', status:'Concluida', envios:88000, entregues:85360, aberturas:55484, optouts:256, isc:3.8, ctr:6.2, conversao:2.4, invest:5200, leads:2100, overlap_pct:33},
+  {nome:'Crédito Mulher Empreendedora', objetivo:'Crédito', hierarquia:'Mae', parent_nome:null, canal:'WhatsApp', perfil:'MEI', produto:'Crédito', uf:'SP', status:'Em Envio', envios:45000, entregues:43650, aberturas:28373, optouts:131, isc:3.6, ctr:6.8, conversao:2.5, invest:3800, leads:1650, overlap_pct:35}
+];
+
+function iscBadge(v) {
+  if (v >= 4) return 'badge badge-green';
+  if (v >= 1) return 'badge badge-amber';
+  return 'badge badge-red';
+}
+
+function overlapClass(pct) {
+  if (pct > 60) return 'overlap-high';
+  return '';
+}
+
+function renderRanking() {
+  var el = document.getElementById('ranking-body');
+  if (!el) return;
+  var sorted = campanhas.filter(function(c){return c.status!=='Planejada'&&c.status!=='Erro';}).sort(function(a,b){return b.isc-a.isc;});
+  function rowHtml(c,i) {
+    var hierLabel = c.hierarquia==='Mae' ? '<span class="hierarchy-tag mae">Mae</span>' : '<span class="hierarchy-tag">Disparo</span>';
+    var olClass = c.overlap_pct > 60 ? 'overlap-high' : '';
+    var too = c.entregues > 0 ? (c.optouts / c.entregues * 100).toFixed(2) : '0,00';
+    return '<tr><td>'+(i+1)+'</td><td>'+c.nome+'</td><td><span class="objetivo-tag">'+c.objetivo+'</span></td><td>'+hierLabel+'</td><td>'+c.canal+'</td><td>'+c.uf+'</td><td>'+c.perfil+'</td><td><span class="'+iscBadge(c.isc)+'">'+c.isc.toFixed(1)+'</span></td><td>'+c.ctr.toFixed(1)+'%</td><td>'+c.leads.toLocaleString('pt-BR')+'</td><td class="'+olClass+'">'+c.overlap_pct+'%</td><td>'+too+'%</td><td>R$ '+c.invest.toLocaleString('pt-BR')+'</td></tr>';
+  }
+  var h = '';
+  for (var i=0;i<sorted.length;i++) h += rowHtml(sorted[i], i);
+  el.innerHTML = h;
+}
+renderRanking();
+
+function guardById(id) { var el = document.getElementById(id); return el ? el : null; }
+
+function classeCamp(c) {
+  if (c.isc >= 4) return 'Super Performático';
+  if (c.invest <= 5000 && c.isc >= 1) return 'Eficiente';
+  if (c.invest > 5000 && c.isc >= 1) return 'Alto Investimento';
+  return 'A Investigar';
+}
+function classeColor(c) {
+  if (c.isc >= 4) return '#2E7D32';
+  if (c.invest <= 5000) return '#0060DF';
+  if (c.isc >= 1) return '#E67E00';
+  return '#C62828';
+}
+
+function renderDetalhada() {
+  var el = document.getElementById('detalhada-body');
+  if (!el) return;
+  var h = '';
+  for (var i=0;i<campanhas.length;i++) {
+    var c = campanhas[i], cpl = c.leads>0 ? c.invest/c.leads : 0;
+    var pctAbert = c.entregues > 0 ? (c.aberturas / c.entregues * 100).toFixed(1) : '0,0';
+    var too = c.entregues > 0 ? (c.optouts / c.entregues * 100).toFixed(2) : '0,00';
+    var olClass = c.overlap_pct > 60 ? 'overlap-high' : '';
+    var cl = classeCamp(c);
+    var cc = classeColor(c);
+    h += '<tr><td>'+c.nome+'</td><td><span style="color:'+cc+';font-weight:600;font-size:var(--fs-xs);">'+cl+'</span></td><td><span class="objetivo-tag">'+c.objetivo+'</span></td><td>'+c.perfil+'</td><td>'+c.uf+'</td><td>'+c.envios.toLocaleString('pt-BR')+'</td><td>'+c.entregues.toLocaleString('pt-BR')+'</td><td>'+c.aberturas.toLocaleString('pt-BR')+'</td><td>'+pctAbert+'%</td><td>'+c.optouts.toLocaleString('pt-BR')+'</td><td>'+too+'%</td><td><span class="'+iscBadge(c.isc)+'">'+c.isc.toFixed(1)+'</span></td><td>'+c.ctr.toFixed(1)+'%</td><td>'+c.conversao.toFixed(1)+'%</td><td>'+c.leads.toLocaleString('pt-BR')+'</td><td>R$ '+cpl.toFixed(2)+'</td><td class="'+olClass+'">'+c.overlap_pct+'%</td><td><span class="status-tag status-'+c.status.toLowerCase().replace(/\s+/g,'-')+'">'+c.status+'</span></td></tr>';
+  }
+  el.innerHTML = h;
+}
+renderDetalhada();
+
+function sortTable(tableId, col) {
+  var table = document.getElementById(tableId);
+  var tbody = table.querySelector('tbody');
+  var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+  var asc = table.getAttribute('data-sort-asc-'+col) !== 'true';
+  rows.sort(function(a,b){
+    var va = a.cells[col].textContent.trim(), vb = b.cells[col].textContent.trim();
+    var na = parseFloat(va.replace('R$ ','').replace(/\./g,'').replace(',','.').replace('%',''));
+    var nb = parseFloat(vb.replace('R$ ','').replace(/\./g,'').replace(',','.').replace('%',''));
+    if (!isNaN(na) && !isNaN(nb)) return asc ? na - nb : nb - na;
+    return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  for (var i=0;i<rows.length;i++) tbody.appendChild(rows[i]);
+  table.setAttribute('data-sort-asc-'+col, asc);
+}
+
+function exportCSV(tableId) {
+  var table = document.getElementById(tableId);
+  var rows = table.querySelectorAll('tr');
+  var csv = '';
+  for (var i=0;i<rows.length;i++) {
+    var cells = rows[i].querySelectorAll('th, td');
+    var row = [];
+    for (var j=0;j<cells.length;j++) {
+      row.push('"'+cells[j].textContent.trim().replace(/"/g,'""')+'"');
+    }
+    csv += row.join(',') + '\n';
+  }
+  var blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = tableId+'.csv';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function initChart(id, option) {
+  var dom = document.getElementById(id);
+  if (!dom) return null;
+  var chart = echarts.init(dom);
+  chart.setOption(option);
+  return chart;
+}
+
+// === Panorama Charts ===
+
+// Evolution Dual Line (overlap + volume, 12 meses)
+(function(){
+  var meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var overlapTrend = [22, 26, 30, 28, 34, 38, 36, 40, 42, 39, 44, 45];
+  var volumeTrend = [8, 10, 12, 11, 14, 16, 15, 18, 20, 17, 19, 22];
+  initChart('chart-evolution', {
+    tooltip:{trigger:'axis'},
+    legend:{bottom:0, textStyle:{fontSize:11}},
+    grid:{top:10, right:55, bottom:55, left:55},
+    xAxis:{type:'category', data:meses, axisLabel:{fontSize:11}},
+    yAxis:[
+      {type:'value', name:'Overlap %', axisLabel:{fontSize:10, formatter:'{value}%'}, min:0, max:60},
+      {type:'value', name:'Campanhas Ativas', axisLabel:{fontSize:10}, min:0, max:25}
+    ],
+    series:[
+      {name:'Overlap %', type:'line', smooth:true, data:overlapTrend, lineStyle:{width:3, color:'#E67E00'}, symbol:'circle', symbolSize:8, color:'#E67E00', label:{show:true, position:'top', fontSize:10, formatter:'{c}%'}},
+      {name:'Campanhas Ativas', type:'line', smooth:true, yAxisIndex:1, data:volumeTrend, lineStyle:{width:3, color:'#0060DF'}, symbol:'diamond', symbolSize:8, color:'#0060DF', label:{show:true, position:'bottom', fontSize:10, formatter:'{c}'}}
+    ]
+  });
+})();
+
+// === Risco Charts ===
+
+// Distribuição por Status (donut)
+(function(){
+  var counts = {Concluida:0,'Em Envio':0,Planejada:0,Erro:0};
+  for (var i=0;i<campanhas.length;i++) counts[campanhas[i].status]++;
+  initChart('chart-status', {
+    tooltip:{trigger:'item', formatter:'{b}: {c} ({d}%)'},
+    series:[{
+      type:'pie', radius:['40%','70%'], center:['50%','50%'],
+      data:[
+        {value:counts.Concluida, name:'Concluida', itemStyle:{color:'#2E7D32'}},
+        {value:counts['Em Envio'], name:'Em Envio', itemStyle:{color:'#0060DF'}},
+        {value:counts.Planejada, name:'Planejada', itemStyle:{color:'#C4C4C4'}},
+        {value:counts.Erro, name:'Erro', itemStyle:{color:'#C62828'}}
+      ],
+      label:{show:true, formatter:'{b}\n{d}%', fontSize:10},
+      emphasis:{itemStyle:{shadowBlur:6, shadowColor:'rgba(0,0,0,0.15)'}}
+    }]
+  });
+})();
+
+// Distribuição por Objetivo (donut)
+(function(){
+  var counts = {};
+  for (var i=0;i<campanhas.length;i++) {
+    var o = campanhas[i].objetivo;
+    counts[o] = (counts[o]||0) + 1;
+  }
+  var objColors = {'Apresentar Solução':'#0060DF', 'Incentivar Especialização':'#2E7D32', 'Regularização':'#E67E00', 'Crédito':'#C62828'};
+  var data = [];
+  for (var i=0;i<objetivos.length;i++) {
+    var o = objetivos[i];
+    data.push({value:counts[o]||0, name:o, itemStyle:{color:objColors[o]}});
+  }
+  initChart('chart-objetivo', {
+    tooltip:{trigger:'item', formatter:'{b}: {c} ({d}%)'},
+    series:[{
+      type:'pie', radius:['40%','70%'], center:['50%','50%'],
+      data:data,
+      label:{show:true, formatter:'{b}\n{d}%', fontSize:10},
+      emphasis:{itemStyle:{shadowBlur:6, shadowColor:'rgba(0,0,0,0.15)'}}
+    }]
+  });
+})();
+
+// Radar ISC x Overlap por Perfil
+(function(){
+  var perfMetrics = {};
+  for (var i=0;i<perfis.length;i++) { perfMetrics[perfis[i]] = {iscSum:0, olSum:0, count:0}; }
+  for (var i=0;i<campanhas.length;i++) {
+    var c = campanhas[i];
+    if (c.status==='Planejada'||c.status==='Erro') continue;
+    if (!perfMetrics[c.perfil]) perfMetrics[c.perfil] = {iscSum:0, olSum:0, tooSum:0, count:0};
+    perfMetrics[c.perfil].iscSum += c.isc;
+    perfMetrics[c.perfil].olSum += c.overlap_pct;
+    perfMetrics[c.perfil].tooSum += (c.entregues > 0 ? c.optouts / c.entregues * 100 : 0);
+    perfMetrics[c.perfil].count++;
+  }
+  var iscArr = [], olArr = [], tooArr = [], maxToo = 0;
+  for (var i=0;i<perfis.length;i++) {
+    var p = perfMetrics[perfis[i]];
+    iscArr.push(p ? Math.round(p.iscSum/p.count*10)/10 : 0);
+    olArr.push(p ? Math.round(p.olSum/p.count) : 0);
+    var too = p ? (p.tooSum/p.count) : 0;
+    tooArr.push(too);
+    if (too > maxToo) maxToo = too;
+  }
+  if (maxToo === 0) maxToo = 1;
+  initChart('chart-radar-perfil', {
+    tooltip:{trigger:'item'},
+    legend:{bottom:0, textStyle:{fontSize:11}, data:['ISC Médio','Overlap %','TOO %']},
+    radar:{
+      indicator:perfis.map(function(p){return {name:p, max:5};}),
+      shape:'circle', splitNumber:5, center:['50%','55%'], radius:'65%',
+      axisName:{fontSize:10, fontWeight:600, color:'#1C1C1C'}
+    },
+    series:[{
+      type:'radar',
+      data:[
+        {value:iscArr, name:'ISC Médio', lineStyle:{width:2, color:'#0060DF'}, areaStyle:{color:'rgba(0,96,223,0.15)'}, itemStyle:{color:'#0060DF'}},
+        {value:olArr.map(function(v){return v*5/60;}), name:'Overlap %', lineStyle:{width:2, color:'#C62828'}, areaStyle:{color:'rgba(198,40,40,0.1)'}, itemStyle:{color:'#C62828'}},
+        {value:tooArr.map(function(v){return v * 5 / maxToo;}), name:'TOO %', lineStyle:{width:2, color:'#E67E00'}, areaStyle:{color:'rgba(230,126,0,0.1)'}, itemStyle:{color:'#E67E00'}}
+      ]
+    }]
+  });
+})();
+
+// Treemap — Overlap% (tamanho) x ISC (cor)
+(function(){
+  var active = campanhas.filter(function(c){return c.status!=='Planejada';});
+  var maxOverlap = 0;
+  for (var i=0;i<active.length;i++) { if (active[i].overlap_pct > maxOverlap) maxOverlap = active[i].overlap_pct; }
+  initChart('chart-treemap-overlap', {
+    tooltip:{
+      formatter:function(p){
+        var d = p.data;
+        return '<b>'+d.name+'</b><br/>Overlap: '+d.overlap_pct+'%<br/>ISC: '+d.isc+'<br/>Objetivo: '+d.objetivo+'<br/>Canal: '+d.canal;
+      }
+    },
+    series:[{
+      type:'treemap',
+      roam:false,
+      width:'92%', height:'85%',
+      top:10, left:10,
+      label:{show:true, formatter:function(p){return p.name+'\n'+p.data.overlap_pct+'%';}, fontSize:10, fontWeight:600, color:'#fff', textShadowBlur:3, textShadowColor:'rgba(0,0,0,0.5)'},
+      itemStyle:{borderColor:'#fff', borderWidth:2, borderRadius:4},
+      breadcrumb:{show:false},
+      data:active.map(function(c){
+        var isc = c.isc;
+        var color = isc >= 4 ? '#2E7D32' : (isc >= 1 ? '#0060DF' : (isc > 0 ? '#E67E00' : '#C62828'));
+        var opacity = 0.4 + (c.overlap_pct / maxOverlap) * 0.6;
+        return {
+          name:c.nome.length>14?c.nome.substr(0,12)+'..':c.nome,
+          value:c.overlap_pct,
+          overlap_pct:c.overlap_pct,
+          isc:isc,
+          objetivo:c.objetivo,
+          canal:c.canal,
+          itemStyle:{color:color, opacity:opacity}
+        };
+      })
+    }]
+  });
+})();
+
+// Scatter — Overlap% x TOO% (bolha = envios, cor = canal)
+(function(){
+  var active = campanhas.filter(function(c){return c.status!=='Planejada'&&c.entregues>0;});
+  var channels = {Email:[],SMS:[],WhatsApp:[]};
+  var chColors = {Email:'#0060DF',SMS:'#C62828',WhatsApp:'#2E7D32'};
+  for (var i=0;i<active.length;i++) {
+    var c = active[i];
+    var too = (c.optouts / c.entregues * 100);
+    (channels[c.canal]||[]).push({
+      name:c.nome, value:[c.overlap_pct, Math.round(too*100)/100, c.envios],
+      overlap_pct:c.overlap_pct, too:too, envios:c.envios, objetivo:c.objetivo, uf:c.uf
+    });
+  }
+  var series = [];
+  for (var ch in channels) {
+    if (!channels[ch].length) continue;
+    series.push({
+      name:ch, type:'scatter', data:channels[ch],
+      symbolSize:function(d){return Math.max(10, Math.sqrt(d[2]||0)/15);},
+      itemStyle:{color:chColors[ch], opacity:0.75},
+      label:{show:false}
+    });
+  }
+  initChart('chart-scatter-overlap-optout', {
+    tooltip:{
+      formatter:function(p){
+        var d = p.data;
+        return '<b>'+d.name+'</b><br/>Overlap: '+d.overlap_pct+'%<br/>TOO: '+d.too.toFixed(2)+'%<br/>Envios: '+d.envios.toLocaleString('pt-BR')+'<br/>UF: '+d.uf;
+      }
+    },
+    legend:{top:0, right:0, textStyle:{fontSize:11}},
+    grid:{top:28, right:20, bottom:45, left:55},
+    xAxis:{type:'value', name:'Overlap %', nameLocation:'center', nameGap:30, axisLabel:{fontSize:10, formatter:'{value}%'}},
+    yAxis:{type:'value', name:'TOO %', nameLocation:'center', nameGap:40, axisLabel:{fontSize:10, formatter:'{value}%'}},
+    series:series
+  });
+})();
+
+// Matriz ISC x Investimento — treemap (área = investimento, cor = ISC, rótulo = nome + ISC + overlap%)
+(function(){
+  var active = campanhas.filter(function(c){return c.status!=='Planejada';});
+  var maxInv = 0;
+  for (var i=0;i<active.length;i++) if (active[i].invest > maxInv) maxInv = active[i].invest;
+  function iscColor(isc) {
+    if (isc >= 4) return '#2E7D32';
+    if (isc >= 1) return '#0060DF';
+    if (isc > 0) return '#E67E00';
+    return '#C62828';
+  }
+  initChart('chart-scatter-isc', {
+    tooltip:{
+      formatter:function(p){
+        var d = p.data;
+        return '<b>'+d.name+'</b><br/>ISC: <b>'+d.isc.toFixed(1)+'</b> | Investimento: R$ '+d.invest.toLocaleString('pt-BR')+'<br/>Overlap: '+d.overlap+'% | '+d.classe;
+      }
+    },
+    series:[{
+      type:'treemap',
+      roam:true,
+      width:'92%', height:'85%',
+      top:10, left:10,
+      label:{show:true, formatter:function(p){return p.name+'\nISC '+p.data.isc.toFixed(1)+' | '+p.data.overlap+'%';}, fontSize:10, fontWeight:600, color:'#fff', textShadowBlur:3, textShadowColor:'rgba(0,0,0,0.5)'},
+      itemStyle:{borderColor:'#fff', borderWidth:2, borderRadius:4},
+      breadcrumb:{show:false},
+      levels:[{
+        colorSaturation:[0.3, 0.7], colorMappingBy:'value',
+        itemStyle:{borderColor:'#fff', borderWidth:2, borderRadius:4, gapWidth:2}
+      }],
+      data:active.map(function(c){
+        return {
+          name:c.nome,
+          value:c.invest,
+          isc:c.isc,
+          overlap:c.overlap_pct,
+          classe:classeCamp(c),
+          invest:c.invest,
+          itemStyle:{color:iscColor(c.isc), opacity:0.5 + (c.overlap_pct/100)*0.5}
+        };
+      })
+    }]
+  });
+})();
+
+// === Segmento Charts ===
+
+// Mini Cards — ISC vs CPL vs TOO por Canal
+(function(){
+  var canalData = {};
+  var canais = ['Email','WhatsApp','SMS'];
+  for (var i=0;i<canais.length;i++) canalData[canais[i]] = {iscSum:0, count:0, invSum:0, leadsSum:0, tooSum:0};
+  for (var i=0;i<campanhas.length;i++) {
+    var c = campanhas[i];
+    if (c.status==='Planejada') continue;
+    if (!canalData[c.canal]) canalData[c.canal] = {iscSum:0, count:0, invSum:0, leadsSum:0, tooSum:0};
+    canalData[c.canal].iscSum += c.isc;
+    canalData[c.canal].count++;
+    canalData[c.canal].invSum += c.invest;
+    canalData[c.canal].leadsSum += c.leads;
+    canalData[c.canal].tooSum += (c.entregues > 0 ? c.optouts / c.entregues * 100 : 0);
+  }
+  var canalIcons = {'Email':'mail','WhatsApp':'message-circle','SMS':'smartphone'};
+  var container = document.getElementById('miniCardsContainer');
+  var html = '';
+  for (var i=0;i<canais.length;i++) {
+    var cd = canalData[canais[i]];
+    var isc = cd && cd.count > 0 ? Math.round(cd.iscSum/cd.count*10)/10 : 0;
+    var cpl = cd && cd.leadsSum > 0 ? Math.round(cd.invSum/cd.leadsSum*100)/100 : 0;
+    var too = cd && cd.count > 0 ? Math.round(cd.tooSum/cd.count*100)/100 : 0;
+    var iscColor = isc >= 3 ? '#2E7D32' : (isc >= 1.5 ? '#E67E00' : '#C62828');
+    var cplColor = cpl <= 2.5 ? '#2E7D32' : (cpl <= 4 ? '#E67E00' : '#C62828');
+    var tooColor = too <= 0.5 ? '#2E7D32' : (too <= 1.0 ? '#E67E00' : '#C62828');
+    html += '<div class="mini-card">';
+    html += '<div class="mini-card-header"><i data-lucide="'+canalIcons[canais[i]]+'" style="width:18px;height:18px;"></i> <strong>'+canais[i]+'</strong></div>';
+    html += '<div class="mini-card-body">';
+    html += '<div class="mini-card-metric"><span class="mini-card-label">ISC</span><span class="mini-card-value" style="color:'+iscColor+';">'+isc.toFixed(1)+'</span></div>';
+    html += '<div class="mini-card-metric"><span class="mini-card-label">CPL</span><span class="mini-card-value" style="color:'+cplColor+';">R$ '+cpl.toFixed(2)+'</span></div>';
+    html += '<div class="mini-card-metric"><span class="mini-card-label">TOO%</span><span class="mini-card-value" style="color:'+tooColor+';">'+too.toFixed(2)+'%</span></div>';
+    html += '</div></div>';
+  }
+  container.innerHTML = html;
+  if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+})();
+
+// ISC por UF (tabela com RGY)
+(function(){
+  var ufList = ['SP','MG','RJ','RS','PR','SC','DF','ES','GO','MS','MT','BA','PE','CE','RN','PB','SE','AL','PI','MA','PA','AM','RO','TO','AP','AC','RR'];
+  var ufIsc = {};
+  for (var i=0;i<campanhas.length;i++) {
+    var c = campanhas[i];
+    if (c.status==='Planejada') continue;
+    if (!ufIsc[c.uf]) ufIsc[c.uf] = {sum:0, count:0};
+    ufIsc[c.uf].sum += c.isc;
+    ufIsc[c.uf].count++;
+  }
+  var ufData = [];
+  for (var i=0;i<ufList.length;i++) {
+    var u = ufIsc[ufList[i]];
+    ufData.push({uf:ufList[i], val:u ? Math.round(u.sum/u.count*10)/10 : null, count: u ? u.count : 0});
+  }
+  ufData.sort(function(a,b){
+    if (a.val === null) return 1; if (b.val === null) return -1;
+    return b.val - a.val;
+  });
+  function rgyClass(v) {
+    if (v === null) return '';
+    if (v >= 3) return 'rgy-green';
+    if (v >= 1.5) return 'rgy-yellow';
+    return 'rgy-red';
+  }
+  var h = '<table><thead><tr><th></th><th>UF</th><th>ISC</th><th>Camp.</th></tr></thead><tbody>';
+  for (var i=0;i<ufData.length;i++) {
+    var d = ufData[i];
+    var v = d.val !== null ? '<span class="'+rgyClass(d.val)+'">'+d.val.toFixed(1)+'</span>' : '<span style="color:var(--gray-40)">—</span>';
+    h += '<tr><td class="rank-col">'+(i+1)+'</td><td class="uf-col">'+d.uf+'</td><td>'+v+'</td><td class="camp-count">'+d.count+' camp.</td></tr>';
+  }
+  h += '</tbody></table>';
+  var el = document.getElementById('isc-uf-table-container');
+  if (el) el.innerHTML = h;
+})();
+
+lucide.createIcons();
+
+window.addEventListener('resize', function() {
+  document.querySelectorAll('.chart-container, .chart-container-sm, .chart-container-lg').forEach(function(el) {
+    var instance = echarts.getInstanceByDom(el);
+    if (instance) instance.resize();
+  });
+});
+</script>
+
+</body>
+</html>

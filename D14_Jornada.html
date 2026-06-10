@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sebrae BI — Jornada do Cliente</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="_shared/design-system.css">
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">S</div>
+    <h1>Sebrae BI</h1>
+    <span class="badge">TO-BE</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="Home.html">
+      <span class="icon" data-lucide="layout-dashboard"></span>
+      Home
+    </a>
+    <a class="nav-item" href="D10-D12_executive.html">
+      <span class="icon" data-lucide="bar-chart-3"></span>
+      Painel Estratégico
+    </a>
+    <a class="nav-item" href="DC_Contratos.html">
+      <span class="icon" data-lucide="file-text"></span>
+      Dash Contratos
+    </a>
+    <a class="nav-item" href="Base_de_Leads.html">
+      <span class="icon" data-lucide="route"></span>
+      Base de Leads
+    </a>
+    <a class="nav-item" href="D13_Campanhas.html">
+      <span class="icon" data-lucide="megaphone"></span>
+      Campanhas
+    </a>
+    <a class="nav-item" href="D9_Performance.html">
+      <span class="icon" data-lucide="layers"></span>
+      Performance Multicanal
+    </a>
+  </nav>
+</aside>
+
+<div class="main">
+  <header class="header">
+    <div class="header-left">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <span data-lucide="menu" style="width:22px;height:22px;"></span>
+      </button>
+      <span class="breadcrumb">Sebrae BI / <strong id="pageTitle">Jornada do Cliente</strong></span>
+    </div>
+    <div class="header-right">
+      <span class="phase">Fase 3 — Campanhas, Jornada e Segmentação</span>
+      <span>v0.3</span>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page active" id="page-d14">
+      <div class="placeholder-page">
+        <div class="icon-big" style="background:var(--orange-10);"><span data-lucide="route" style="width:32px;height:32px;color:var(--orange-60);"></span></div>
+        <h3>Jornada do Cliente</h3>
+        <p>Dashboard tático com visualização da jornada do cliente: funil de conversão, pontos de contato, tempo entre etapas e taxa de avanço entre estágios.</p>
+        <div class="banner-redirect" style="margin-top:16px;padding:12px 16px;background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;font-size:14px;color:#92400E;">
+          <strong>⏳ Redirecionado</strong> — Este dashboard foi unificado em <a href="Base_de_Leads.html" style="color:#7C3AED;font-weight:600;text-decoration:underline;">Base de Leads</a> (aba "Jornada"). Segmentação foi descontinuada.
+        </div>
+        <div class="eta">Disponível na Fase 3</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="_shared/framework.js"></script>
+</body>
+</html>

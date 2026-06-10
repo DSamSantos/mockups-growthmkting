@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sebrae BI — Base de Leads</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="_shared/design-system.css">
+<style>
+.journey-flow { display: flex; align-items: center; gap: 0; margin: 16px 0; flex-wrap: wrap; }
+.journey-step { flex: 1; min-width: 120px; text-align: center; padding: 14px 8px; border-radius: var(--radius-md); font-size: var(--fs-sm); position: relative; }
+.journey-step .step-pct { font-size: 22px; font-weight: 700; display: block; }
+.journey-step .step-label { font-size: 10px; text-transform: uppercase; letter-spacing: .4px; color: var(--gray-50); margin-top: 2px; }
+.journey-step.step-1 { background: var(--blue-10); color: var(--blue-60); }
+.journey-step.step-2 { background: #E0F2F1; color: var(--teal); }
+.journey-step.step-3 { background: var(--orange-10); color: var(--orange-70); }
+.journey-step.step-4 { background: var(--purple-bg); color: var(--purple); }
+.journey-step.step-5 { background: #FFF8E1; color: var(--amber); }
+.journey-arrow { color: var(--gray-30); font-size: 20px; padding: 0 4px; font-weight: 300; }
+
+.semaphore { display: flex; gap: 8px; align-items: center; }
+.semaphore .dot { width: 12px; height: 12px; border-radius: 50%; }
+.semaphore .dot.green { background: var(--green); }
+.semaphore .dot.yellow { background: #E67E00; }
+.semaphore .dot.red { background: var(--red); }
+
+.chs-green { color: var(--green); font-weight: 600; }
+.chs-yellow { color: #E67E00; font-weight: 600; }
+.chs-red { color: var(--red); font-weight: 600; }
+
+.heatmap-legend { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: var(--fs-xs); color: var(--gray-50); }
+.heatmap-bar { width: 120px; height: 8px; border-radius: 4px; }
+
+.tbl-wrap { overflow-x: auto; font-size: var(--fs-sm); }
+.tbl-wrap table { width: 100%; border-collapse: collapse; }
+.tbl-wrap th { font-size: var(--fs-xs); color: var(--gray-50); text-transform: uppercase; letter-spacing: .3px; padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--gray-20); font-weight: 600; }
+.tbl-wrap td { padding: 8px 10px; border-bottom: 1px solid var(--gray-10); color: var(--gray-70); }
+
+.kpi-inline { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.kpi-inline .kpi-item { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--white); border: 1px solid var(--gray-10); border-radius: var(--radius-sm); }
+.kpi-inline .kpi-item .kpi-val { font-size: var(--fs-lg); font-weight: 700; color: var(--gray-80); }
+.kpi-inline .kpi-item .kpi-lbl { font-size: var(--fs-xs); color: var(--gray-50); }
+
+.story-callout { background: var(--blue-05); border-left: 3px solid var(--blue-60); padding: 12px 16px; margin: 16px 0; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: var(--fs-sm); color: var(--gray-60); line-height: 1.5; }
+
+.filtros-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 16px; background: var(--white); border: 1px solid var(--gray-20); border-radius: var(--radius-md); margin-bottom: 20px; align-items: center; }
+.filtros-bar .filtro-label { font-size: var(--fs-xs); font-weight: 600; color: var(--gray-50); text-transform: uppercase; letter-spacing: .5px; }
+.filtros-bar select { padding: 6px 10px; border: 1px solid var(--gray-20); border-radius: 6px; font-size: var(--fs-sm); background: white; color: var(--gray-60); }
+.filtros-bar input[type="date"] { padding: 6px 10px; border: 1px solid var(--gray-20); border-radius: 6px; font-size: var(--fs-sm); background: white; color: var(--gray-60); }
+
+@media (max-width: 768px) {
+  .journey-flow { flex-direction: column; gap: 4px; }
+  .journey-arrow { transform: rotate(90deg); }
+  .kpi-inline { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">S</div>
+    <h1>Sebrae BI</h1>
+    <span class="badge">TO-BE</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="Home.html">
+      <span class="icon" data-lucide="layout-dashboard"></span>
+      Home
+    </a>
+    <a class="nav-item" href="D10-D12_executive.html">
+      <span class="icon" data-lucide="bar-chart-3"></span>
+      Painel Estratégico
+    </a>
+    <a class="nav-item" href="DC_Contratos.html">
+      <span class="icon" data-lucide="file-text"></span>
+      Dash Contratos
+    </a>
+    <a class="nav-item active" href="Base_de_Leads.html">
+      <span class="icon" data-lucide="route"></span>
+      Base de Leads
+    </a>
+    <a class="nav-item" href="D13_Campanhas.html">
+      <span class="icon" data-lucide="megaphone"></span>
+      Campanhas
+    </a>
+    <a class="nav-item" href="D9_Performance.html">
+      <span class="icon" data-lucide="layers"></span>
+      Performance Multicanal
+    </a>
+  </nav>
+</aside>
+
+<div class="main">
+  <header class="header">
+    <div class="header-left">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <span data-lucide="menu" style="width:22px;height:22px;"></span>
+      </button>
+      <span class="breadcrumb">Sebrae BI / <strong id="pageTitle">Base de Leads</strong></span>
+    </div>
+    <div class="header-right">
+      <span class="phase">Fase 3 — Implantação</span>
+      <span>v2.0</span>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page active" id="page-base-leads">
+      <div class="page-header">
+        <h2>Base de Leads</h2>
+        <p>Storytelling único: Volume &amp; Fluxo → Qualificação → Saturação. Unifica os antigos D14 (Jornada) e D16 (Segmentação &amp; Overlap).</p>
+      </div>
+
+      <div class="accordion-story">
+        <div class="accordion-story-header" onclick="toggleAccordion(this)">
+          <div style="font-size:var(--fs-xs);font-weight:600;color:var(--blue-70);text-transform:uppercase;letter-spacing:0.5px;">Storytelling — Base de Leads</div>
+          <span class="toggle-icon">▼</span>
+        </div>
+        <div class="accordion-story-body">
+          <div style="font-size:var(--fs-sm);color:var(--gray-60);line-height:1.5;">
+            <strong>Volume &amp; Fluxo.</strong> Quem está na jornada, como progride, onde trava e como a base se comporta ao longo do tempo (cohort).<br>
+            <strong>Qualificação.</strong> Qual a qualidade desses leads? Score ISC por etapa, engajamento e resultados.<br>
+            <strong>Saturação.</strong> Estamos saturando o mesmo público? Overlap entre campanhas, frequência de contato e histórico de campanhas.
+          </div>
+        </div>
+      </div>
+
+      <div class="filtros-bar">
+        <span class="filtro-label">Filtros:</span>
+        <select><option>Perfil: Todos</option><option>MEI</option><option>ME</option><option>EPP</option><option>Prod. Rural</option><option>Informal</option></select>
+        <select><option>UF: Todas</option><option>SP</option><option>MG</option><option>RJ</option><option>BA</option><option>RS</option><option>PR</option><option>SC</option><option>PE</option><option>CE</option><option>Outras</option></select>
+        <select><option>Produto: Todos</option><option>Consultoria</option><option>Capacitação</option><option>Crédito</option><option>Cursos</option><option>Sol. Digitais</option></select>
+        <select><option>Período: Últimos 12 meses</option><option>Últimos 6 meses</option><option>Últimos 3 meses</option><option>Personalizado</option></select>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:var(--fs-xs);font-weight:500;color:var(--gray-40);">De:</span>
+          <input type="date" value="2025-07-01">
+          <span style="font-size:var(--fs-xs);font-weight:500;color:var(--gray-40);">Até:</span>
+          <input type="date" value="2026-06-08">
+        </div>
+      </div>
+
+      <!-- ===== ACT 1: Volume & Fluxo ===== -->
+      <div class="act-divider">
+        <span class="act-number">Seção 1</span>
+        <span class="act-title">Volume &amp; Fluxo</span>
+        <span class="act-subtitle">Quem está na jornada e como progride</span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="label">Taxa de Avanço</div><div class="value">62%</div><div class="change up"><span class="trend-icon">↑</span>3% vs mês ant.</div></div>
+        <div class="kpi-card"><div class="label">Tempo Médio por Etapa</div><div class="value">14 <span style="font-size:14px;font-weight:400;">d</span></div><div class="sub">Descoberta: 21d | Conversão: 7d</div></div>
+        <div class="kpi-card"><div class="label">Contatos na Jornada</div><div class="value">142,8K</div><div class="sub">Base ativa total</div></div>
+        <div class="kpi-card"><div class="label">Taxa de Conclusão</div><div class="value">58%</div><div class="change down"><span class="trend-icon">↓</span>2% vs mês ant.</div></div>
+        <div class="kpi-card"><div class="label">Taxa de Abandono</div><div class="value" style="color:var(--red);">23%</div><div class="sub">Maior gargalo: Descoberta → Interesse</div></div>
+        <div class="kpi-card"><div class="label">Retenção 12 meses</div><div class="value">47%</div><div class="sub">% contatos ativos após 1 ano</div></div>
+      </div>
+
+      <div class="section-header">
+        <span class="section-header-title">Jornada</span>
+        <span class="section-header-sub">Distribuição, avanço e tempo por etapa</span>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:var(--fs-sm);font-weight:600;color:var(--gray-60);">Mapa da Jornada</span>
+          <span style="font-size:var(--fs-xs);color:var(--gray-40);">% de contatos em cada etapa</span>
+        </div>
+        <div class="journey-flow">
+          <div class="journey-step step-1"><span class="step-pct">32%</span><span class="step-label">Descoberta</span></div>
+          <span class="journey-arrow">→</span>
+          <div class="journey-step step-2"><span class="step-pct">24%</span><span class="step-label">Interesse</span></div>
+          <span class="journey-arrow">→</span>
+          <div class="journey-step step-3"><span class="step-pct">18%</span><span class="step-label">Consideração</span></div>
+          <span class="journey-arrow">→</span>
+          <div class="journey-step step-4"><span class="step-pct">16%</span><span class="step-label">Conversão</span></div>
+          <span class="journey-arrow">→</span>
+          <div class="journey-step step-5"><span class="step-pct">10%</span><span class="step-label">Pós-Venda</span></div>
+        </div>
+      </div>
+
+      <div class="row col-3">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Distribuição por Perfil</span>
+            <span class="card-subtitle">% de contatos em cada etapa, por perfil</span>
+          </div>
+          <div class="chart-container" id="chart-jornada-perfil"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Taxa de Avanço por Etapa</span>
+            <span class="card-subtitle">% que avança para etapa seguinte</span>
+          </div>
+          <div class="chart-container-sm" id="chart-jornada-avanco"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Tempo Médio por Etapa</span>
+            <span class="card-subtitle">Dias entre entrada e saída de cada etapa</span>
+          </div>
+          <div class="chart-container-sm" id="chart-jornada-tempo"></div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <span class="section-header-title">Funil</span>
+        <span class="section-header-sub">Conclusão, gargalos e perfil de completude</span>
+      </div>
+
+      <div class="row col-3">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Funil da Jornada</span>
+            <span class="card-subtitle">Barras decrescentes com retenção entre etapas</span>
+          </div>
+          <div class="chart-container" id="chart-funil-funnel"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Gargalos</span>
+            <span class="card-subtitle">Drop-off > 50% destacado em vermelho</span>
+          </div>
+          <div class="chart-container-sm" id="chart-funil-gargalos"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Conclusão por Perfil</span>
+            <span class="card-subtitle">% de completude por perfil de cliente</span>
+          </div>
+          <div class="chart-container-sm" id="chart-funil-completion-perfil"></div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <span class="section-header-title">Coorte</span>
+        <span class="section-header-sub">Retenção e maturidade digital por coorte de entrada</span>
+      </div>
+
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Matriz de Coorte</span>
+            <span class="card-subtitle">% retidos por mês de entrada × meses desde entrada</span>
+          </div>
+          <div class="chart-container-lg" id="chart-cohort-matriz"></div>
+          <div class="heatmap-legend"><span>0%</span><div class="heatmap-bar" style="background:linear-gradient(to right,#FFEBEE,#E8F5E9,#2E7D32);"></div><span>100%</span></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Retenção por Perfil</span>
+            <span class="card-subtitle">% retidos mês a mês, uma linha por perfil</span>
+          </div>
+          <div class="chart-container" id="chart-cohort-retencao"></div>
+        </div>
+      </div>
+
+      <div class="story-callout">
+        <strong>Insight:</strong> A jornada perde 38% dos contatos entre Descoberta e Interesse — maior gargalo. Cohorts recentes mostram retenção decrescente, com MEI sendo o perfil de maior churn.
+      </div>
+
+      <!-- ===== ACT 2: Qualificação ===== -->
+      <div class="act-divider">
+        <span class="act-number">Seção 2</span>
+        <span class="act-title">Qualificação</span>
+        <span class="act-subtitle">Qualidade dos leads: ISC, engajamento e resultados</span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="label">ISC Médio</div><div class="value">72.4</div><div class="sub">Geral da base</div></div>
+        <div class="kpi-card"><div class="label">Recência Média</div><div class="value">38 <span style="font-size:14px;font-weight:400;">d</span></div><div class="sub">Dias desde última interação</div></div>
+        <div class="kpi-card"><div class="label">Interações (30d)</div><div class="value">24,3K</div><div class="change up"><span class="trend-icon">↑</span>8% vs mês ant.</div></div>
+        <div class="kpi-card"><div class="label">Atendimentos (30d)</div><div class="value">8,1K</div><div class="sub">Média de 270/dia</div></div>
+      </div>
+
+      <div class="section-header">
+        <span class="section-header-title">ISC — Índice de Sucesso da Campanha</span>
+        <span class="section-header-sub">Score por etapa, perfil e tendência ao longo do tempo</span>
+      </div>
+
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">ISC por Etapa</span>
+            <span class="card-subtitle">Score médio por etapa da jornada</span>
+          </div>
+          <div class="chart-container-sm" id="chart-isc-etapa"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">ISC por Perfil</span>
+            <span class="card-subtitle">Score médio por perfil de cliente</span>
+          </div>
+          <div class="chart-container-sm" id="chart-isc-perfil"></div>
+        </div>
+      </div>
+
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Tendência ISC</span>
+            <span class="card-subtitle">ISC por etapa ao longo do tempo</span>
+          </div>
+          <div class="chart-container" id="chart-isc-tendencia"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">ISC por Perfil × Etapa</span>
+            <span class="card-subtitle">Heatmap: linhas = Perfil, colunas = Etapa</span>
+          </div>
+          <div class="chart-container" id="chart-isc-heatmap"></div>
+          <div class="heatmap-legend"><span>Baixo ISC</span><div class="heatmap-bar" style="background:linear-gradient(to right,#E8E8E8,#80BCFF,#0045A3);"></div><span>Alto ISC</span></div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <span class="section-header-title">Engajamento e Resultados</span>
+        <span class="section-header-sub">Score RFV, recência, interações e conclusão de jornada</span>
+      </div>
+
+      <div class="row col-3">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Score R/F/V por Perfil</span>
+            <span class="card-subtitle">Recência, Frequência e Valor por perfil de cliente</span>
+          </div>
+          <div class="chart-container" id="chart-engajamento-score-perfil"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Distribuição por Recência</span>
+            <span class="card-subtitle">Contatos por faixa de dias desde última interação</span>
+          </div>
+          <div class="chart-container" id="chart-recencia-distribuicao"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Interações nos Últimos 30d</span>
+            <span class="card-subtitle">Volume de interações por perfil</span>
+          </div>
+          <div class="chart-container" id="chart-engajamento-interacoes"></div>
+        </div>
+      </div>
+
+      <div class="row col-3">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recência Média por UF</span>
+            <span class="card-subtitle">Dias desde última interação (top 10)</span>
+          </div>
+          <div class="chart-container" id="chart-recencia-uf"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Atendimentos nos Últimos 30d</span>
+            <span class="card-subtitle">Volume de atendimentos por perfil</span>
+          </div>
+          <div class="chart-container" id="chart-engajamento-atendimentos"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">% Conclusão da Jornada</span>
+            <span class="card-subtitle">Taxa de conclusão por perfil</span>
+          </div>
+          <div class="chart-container" id="chart-engajamento-conclusao"></div>
+        </div>
+      </div>
+
+      <div class="story-callout">
+        <strong>Insight:</strong> ISC médio de 72,4 com melhor performance na etapa Conversão (81,2). SP e MG lideram em recência — ações de reengajamento prioritárias. Apenas 58% dos contatos concluem a jornada completa.
+      </div>
+
+      <!-- ===== ACT 3: Saturação ===== -->
+      <div class="act-divider">
+        <span class="act-number">Seção 3</span>
+        <span class="act-title">Saturação</span>
+        <span class="act-subtitle">Overlap entre campanhas, frequência de contato e histórico</span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="label">Overlap Geral</div><div class="value">38%</div><div class="sub">Contatos com 2+ campanhas</div></div>
+        <div class="kpi-card"><div class="label">Frequência Média</div><div class="value">2.4</div><div class="sub">Campanhas por contato</div></div>
+        <div class="kpi-card"><div class="label">Campanhas no Período</div><div class="value">47</div></div>
+        <div class="kpi-card"><div class="label">Saturação Média</div><div class="value">2.4</div><div class="sub">Campanhas/contato</div></div>
+      </div>
+
+      <div class="section-header">
+        <span class="section-header-title">Overlap entre Campanhas</span>
+        <span class="section-header-sub">Sobreposição de público e distribuição de frequência</span>
+      </div>
+
+      <div class="row col-2-1">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Grafo de Overlap</span>
+            <span class="card-subtitle">Nós = campanhas (tamanho = alcance) · Arestas = % overlap</span>
+          </div>
+          <div class="chart-container-lg" id="chart-overlap-matriz"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Distribuição de Frequência</span>
+            <span class="card-subtitle">Contatos por número de campanhas recebidas</span>
+          </div>
+          <div class="chart-container" id="chart-overlap-freq"></div>
+        </div>
+      </div>
+
+      <div class="row col-1">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Top Conjuntos com Maior Overlap</span>
+            <span class="card-subtitle">Conjuntos de 2+ campanhas com maior sobreposição de público</span>
+          </div>
+          <div class="tbl-wrap" id="table-overlap-pares"></div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <span class="section-header-title">Histórico de Campanhas</span>
+        <span class="section-header-sub">Volume, distribuição e saturação ao longo do tempo</span>
+      </div>
+
+      <div class="row col-3">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Campanhas por Mês</span>
+            <span class="card-subtitle">Número de campanhas ativas por mês</span>
+          </div>
+          <div class="chart-container" id="chart-hist-campanhas-mes"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Contatos por Campanha</span>
+            <span class="card-subtitle">Distribuição do tamanho das bases</span>
+          </div>
+          <div class="chart-container" id="chart-hist-contatos"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Saturação por UF</span>
+            <span class="card-subtitle">Média de campanhas recebidas por contato (top 10)</span>
+          </div>
+          <div class="chart-container" id="chart-hist-saturacao"></div>
+        </div>
+      </div>
+
+      <div class="story-callout">
+        <strong>Insight:</strong> 38% da base recebe 2+ campanhas. Camp. A (Leads Geral) e Camp. E (CRM Reativação) têm 42% de overlap — risco de canibalização. Saturação mais alta no Sudeste (SP: 3.2 campanhas/contato).
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="_shared/framework.js"></script>
+<script>
+var perfis = ['MEI','ME','EPP','Prod. Rural','Informal'];
+var coresPerfil = ['#0045A3','#00897B','#E67E00','#C62828','#6A1B9A'];
+var etapas = ['Descoberta','Interesse','Consideração','Conversão','Pós-Venda'];
+var meses = ['Jul/25','Ago/25','Set/25','Out/25','Nov/25','Dez/25','Jan/26','Fev/26','Mar/26','Abr/26','Mai/26','Jun/26'];
+var siglasUF = ['SP','MG','RJ','BA','RS','PR','SC','PE','CE','DF','GO','PA','MA','ES','RN','PB','AL','PI','RO','MS','MT','SE','AM','AC','AP','RR','TO'];
+var nomesUF = ['São Paulo','Minas Gerais','Rio de Janeiro','Bahia','Rio Grande do Sul','Paraná','Santa Catarina','Pernambuco','Ceará','Distrito Federal','Goiás','Pará','Maranhão','Espírito Santo','Rio Grande do Norte','Paraíba','Alagoas','Piauí','Rondônia','Mato Grosso do Sul','Mato Grosso','Sergipe','Amazonas','Acre','Amapá','Roraima','Tocantins'];
+
+function r(min, max) { return Math.round((Math.random() * (max - min) + min) * 10) / 10; }
+
+// ========== ACT 1 – Jornada ==========
+
+initChart('chart-jornada-perfil', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  legend: { data: perfis, bottom: 0, icon: 'circle', itemWidth: 8, itemHeight: 8, textStyle: { fontSize: 10 } },
+  grid: { top: 10, right: 10, bottom: 36, left: 50 },
+  xAxis: { type: 'category', data: etapas, axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', axisLabel: { fontSize: 10, formatter: '{value}%' } },
+  series: perfis.map(function(p, i) { return {
+    name: p, type: 'bar', stack: 'total',
+    data: [r(8,28), r(5,22), r(4,18), r(3,14), r(2,10)].map(function(v) { return Math.round(v); }),
+    itemStyle: { color: coresPerfil[i] },
+    barWidth: '55%'
+  }; })
+});
+
+initChart('chart-jornada-avanco', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 5, right: 10, bottom: 24, left: 40 },
+  xAxis: { type: 'category', data: etapas.slice(0,4), axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', max: 100, axisLabel: { fontSize: 10, formatter: '{value}%' } },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: 62, itemStyle: { color: '#0045A3', borderRadius: [4,4,0,0] } },
+      { value: 58, itemStyle: { color: '#80BCFF', borderRadius: [4,4,0,0] } },
+      { value: 71, itemStyle: { color: '#00897B', borderRadius: [4,4,0,0] } },
+      { value: 45, itemStyle: { color: '#E67E00', borderRadius: [4,4,0,0] } }
+    ],
+    barWidth: '50%',
+    label: { show: true, position: 'top', fontSize: 10, fontWeight: 600, formatter: '{c}%' }
+  }]
+});
+
+initChart('chart-jornada-tempo', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 5, right: 30, bottom: 5, left: 90 },
+  xAxis: { type: 'value', axisLabel: { fontSize: 10, formatter: '{value}d' } },
+  yAxis: { type: 'category', data: etapas, inverse: true, axisLabel: { fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: 21, itemStyle: { color: '#0045A3', borderRadius: [0,4,4,0] } },
+      { value: 18, itemStyle: { color: '#80BCFF', borderRadius: [0,4,4,0] } },
+      { value: 14, itemStyle: { color: '#00897B', borderRadius: [0,4,4,0] } },
+      { value: 7, itemStyle: { color: '#E67E00', borderRadius: [0,4,4,0] } },
+      { value: 10, itemStyle: { color: '#6A1B9A', borderRadius: [0,4,4,0] } }
+    ],
+    barWidth: '55%',
+    label: { show: true, position: 'right', fontSize: 10, fontWeight: 600, formatter: '{c}d' }
+  }]
+});
+
+// ========== ACT 1 – Funil ==========
+
+initChart('chart-funil-funnel', {
+  tooltip: { trigger: 'item', formatter: '{b}: {c}%' },
+  series: [{
+    type: 'funnel', left: '5%', right: '15%', top: 10, bottom: 10,
+    min: 0, max: 100, minSize: '10%', maxSize: '90%',
+    sort: 'descending', gap: 4,
+    label: { show: true, position: 'inside', fontSize: 11, formatter: '{b}\n{c}%' },
+    itemStyle: { borderColor: '#fff', borderWidth: 2 },
+    data: [
+      { value: 100, name: 'Descoberta', itemStyle: { color: '#0045A3' } },
+      { value: 72, name: 'Interesse', itemStyle: { color: '#80BCFF' } },
+      { value: 48, name: 'Consideração', itemStyle: { color: '#00897B' } },
+      { value: 31, name: 'Conversão', itemStyle: { color: '#E67E00' } },
+      { value: 18, name: 'Pós-Venda', itemStyle: { color: '#6A1B9A' } }
+    ]
+  }]
+});
+
+initChart('chart-funil-gargalos', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 16, right: 20, bottom: 24, left: 40 },
+  xAxis: { type: 'category', data: ['Desc.→Int.','Int.→Cons.','Cons.→Conv.','Conv.→Pós'], axisLabel: { fontSize: 9 } },
+  yAxis: { type: 'value', max: 100, axisLabel: { fontSize: 10, formatter: '{value}%' } },
+  series: [{
+    name: 'Drop-off',
+    type: 'bar',
+    data: [
+      { value: 38, itemStyle: { color: '#00897B', borderRadius: [4,4,0,0] } },
+      { value: 52, itemStyle: { color: '#C62828', borderRadius: [4,4,0,0] } },
+      { value: 29, itemStyle: { color: '#00897B', borderRadius: [4,4,0,0] } },
+      { value: 55, itemStyle: { color: '#C62828', borderRadius: [4,4,0,0] } }
+    ],
+    barWidth: '45%',
+    label: { show: true, position: 'top', fontSize: 10, formatter: function(p) { return p.value + '%'; } },
+    markLine: { silent: true, symbol: 'none', data: [{ yAxis: 50, label: { formatter: 'Alerta 50%', fontSize: 9, color: '#C62828', position: 'start' }, lineStyle: { color: '#C62828', type: 'dashed' } }] }
+  }]
+});
+
+initChart('chart-funil-completion-perfil', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 5, right: 30, bottom: 5, left: 85 },
+  xAxis: { type: 'value', max: 100, axisLabel: { fontSize: 10, formatter: '{value}%' } },
+  yAxis: { type: 'category', data: perfis, inverse: true, axisLabel: { fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+  series: [{
+    type: 'bar',
+    data: perfis.map(function(p, i) { return { value: r(35, 75), itemStyle: { color: coresPerfil[i], borderRadius: [0,4,4,0] } }; }),
+    barWidth: '55%',
+    label: { show: true, position: 'right', fontSize: 10, fontWeight: 600, formatter: '{c}%' }
+  }]
+});
+
+// ========== ACT 1 – Cohort ==========
+
+var cohortData = [];
+for (var cm = 0; cm < 12; cm++) {
+  for (var cn = 0; cn < 12; cn++) {
+    var val = cn <= cm ? Math.max(3, Math.round(80 - (cn * 6) + (Math.random() * 10 - 5))) : '-';
+    cohortData.push([cn, cm, val]);
+  }
+}
+initChart('chart-cohort-matriz', {
+  tooltip: { position: 'top', formatter: function(p) { return '<b>Cohort ' + meses[p.value[1]] + '</b><br/>Mês ' + (p.value[0]+1) + ': ' + (p.value[2] === '-' ? '-' : p.value[2] + '%'); } },
+  grid: { top: 5, right: 10, bottom: 50, left: 65 },
+  xAxis: { type: 'category', data: function(){var a=[];for(var i=1;i<=12;i++)a.push('Mês '+i);return a;}(), splitArea: { show: true }, axisLabel: { fontSize: 9 } },
+  yAxis: { type: 'category', data: meses, splitArea: { show: true }, axisLabel: { fontSize: 9 } },
+  visualMap: { min: 0, max: 85, calculable: false, orient: 'horizontal', left: 'center', bottom: 0, inRange: { color: ['#FFEBEE','#FFCDD2','#E8F5E9','#C8E6C9','#2E7D32'] }, textStyle: { fontSize: 8 } },
+  series: [{ type: 'heatmap', data: cohortData.filter(function(d){return d[2]!=='-';}), label: { show: true, fontSize: 8, formatter: function(p){return p.value[2]+'%';} }, itemStyle: { borderWidth: 1, borderColor: '#fff' } }]
+});
+
+initChart('chart-cohort-retencao', {
+  tooltip: { trigger: 'axis' },
+  legend: { data: perfis, bottom: 0, icon: 'circle', itemWidth: 8, itemHeight: 8, textStyle: { fontSize: 10 } },
+  grid: { top: 10, right: 10, bottom: 36, left: 40 },
+  xAxis: { type: 'category', data: function(){var a=[];for(var i=1;i<=12;i++)a.push('Mês '+i);return a;}(), axisLabel: { fontSize: 9 } },
+  yAxis: { type: 'value', max: 100, axisLabel: { fontSize: 10, formatter: '{value}%' } },
+  series: perfis.map(function(p, i) { return {
+    name: p, type: 'line', smooth: true,
+    data: function(){var a=[];for(var j=0;j<12;j++)a.push(Math.round(Math.max(5,80-j*7+(perfis.length-i)*2+Math.random()*8-4)));return a;}(),
+    lineStyle: { width: 1.5, color: coresPerfil[i] },
+    symbol: 'circle', symbolSize: 3, color: coresPerfil[i]
+  }; })
+});
+
+// ========== ACT 2 – ISC ==========
+
+initChart('chart-isc-etapa', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 5, right: 10, bottom: 24, left: 40 },
+  xAxis: { type: 'category', data: etapas, axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', min: 40, max: 90, axisLabel: { fontSize: 10 } },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: 58.7, itemStyle: { color: '#C62828', borderRadius: [4,4,0,0] } },
+      { value: 68.2, itemStyle: { color: '#E67E00', borderRadius: [4,4,0,0] } },
+      { value: 74.5, itemStyle: { color: '#80BCFF', borderRadius: [4,4,0,0] } },
+      { value: 81.2, itemStyle: { color: '#00897B', borderRadius: [4,4,0,0] } },
+      { value: 79.6, itemStyle: { color: '#0045A3', borderRadius: [4,4,0,0] } }
+    ],
+    barWidth: '50%',
+    label: { show: true, position: 'top', fontSize: 10, fontWeight: 600 }
+  }]
+});
+
+initChart('chart-isc-perfil', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 5, right: 10, bottom: 24, left: 60 },
+  xAxis: { type: 'category', data: perfis, axisLabel: { fontSize: 9, rotate: 20 } },
+  yAxis: { type: 'value', min: 40, max: 90, axisLabel: { fontSize: 10 } },
+  series: [{
+    type: 'bar',
+    data: perfis.map(function(p, i) { return { value: Math.round(r(50, 85) + (perfis.length - i) * 2), itemStyle: { color: coresPerfil[i], borderRadius: [4,4,0,0] } }; }),
+    barWidth: '50%',
+    label: { show: true, position: 'top', fontSize: 10, fontWeight: 600 }
+  }]
+});
+
+initChart('chart-isc-tendencia', {
+  tooltip: { trigger: 'axis' },
+  legend: { data: etapas, bottom: 0, icon: 'circle', itemWidth: 8, itemHeight: 8, textStyle: { fontSize: 10 } },
+  grid: { top: 10, right: 10, bottom: 52, left: 40 },
+  xAxis: { type: 'category', data: meses, axisLabel: { fontSize: 9 } },
+  yAxis: { type: 'value', min: 40, max: 90, axisLabel: { fontSize: 10 } },
+  series: [
+    { name: 'Descoberta', type: 'line', data: meses.map(function(){return r(50,65);}), smooth: true, lineStyle: { width: 1.5, color: '#C62828' }, symbol: 'circle', symbolSize: 3, color: '#C62828' },
+    { name: 'Interesse', type: 'line', data: meses.map(function(){return r(60,72);}), smooth: true, lineStyle: { width: 1.5, color: '#E67E00' }, symbol: 'circle', symbolSize: 3, color: '#E67E00' },
+    { name: 'Consideração', type: 'line', data: meses.map(function(){return r(68,78);}), smooth: true, lineStyle: { width: 1.5, color: '#80BCFF' }, symbol: 'circle', symbolSize: 3, color: '#80BCFF' },
+    { name: 'Conversão', type: 'line', data: meses.map(function(){return r(75,85);}), smooth: true, lineStyle: { width: 1.5, color: '#00897B' }, symbol: 'circle', symbolSize: 3, color: '#00897B' },
+    { name: 'Pós-Venda', type: 'line', data: meses.map(function(){return r(72,82);}), smooth: true, lineStyle: { width: 1.5, color: '#6A1B9A' }, symbol: 'circle', symbolSize: 3, color: '#6A1B9A' }
+  ]
+});
+
+var iscHeat = [];
+for (var pi = 0; pi < perfis.length; pi++) {
+  for (var ei = 0; ei < etapas.length; ei++) {
+    iscHeat.push([ei, pi, Math.round(r(40, 85) + (ei * 4) + (perfis.length - pi) * 2)]);
+  }
+}
+initChart('chart-isc-heatmap', {
+  tooltip: { position: 'top', formatter: function(p) { return '<b>' + perfis[p.value[1]] + ' × ' + etapas[p.value[0]] + '</b><br/>ISC: ' + p.value[2]; } },
+  grid: { top: 5, right: 10, bottom: 50, left: 65 },
+  xAxis: { type: 'category', data: etapas, splitArea: { show: true }, axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'category', data: perfis, splitArea: { show: true }, axisLabel: { fontSize: 10 } },
+  visualMap: { min: 40, max: 90, calculable: false, orient: 'horizontal', left: 'center', bottom: 0, inRange: { color: ['#F5F5F5','#E3F0FF','#80BCFF','#0045A3','#0045A3'] }, textStyle: { fontSize: 8 } },
+  series: [{ type: 'heatmap', data: iscHeat, label: { show: true, fontSize: 10, fontWeight: 600 }, itemStyle: { borderWidth: 2, borderColor: '#fff' } }]
+});
+
+// ========== ACT 2 – Engajamento e Resultados ==========
+
+var topUF = ['SP','MG','RJ','BA','RS','PR','SC','PE','CE','DF'];
+
+var recenciaData = [
+  { uf: 'BA', val: 52 }, { uf: 'PE', val: 47 }, { uf: 'CE', val: 43 },
+  { uf: 'MG', val: 38 }, { uf: 'RJ', val: 34 }, { uf: 'SP', val: 31 },
+  { uf: 'PR', val: 27 }, { uf: 'RS', val: 23 }, { uf: 'SC', val: 20 }, { uf: 'DF', val: 17 }
+].sort(function(a,b){ return b.val - a.val; });
+
+initChart('chart-recencia-uf', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 10, right: 30, bottom: 5, left: 35 },
+  xAxis: { type: 'value', axisLabel: { fontSize: 10, formatter: '{value}d' } },
+  yAxis: { type: 'category', data: recenciaData.map(function(d){ return d.uf; }), inverse: false, axisLabel: { fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+  series: [{
+    type: 'bar',
+    data: recenciaData.map(function(d, i) { return { value: d.val, itemStyle: { color: i < 3 ? '#C62828' : i > 6 ? '#00897B' : '#80BCFF', borderRadius: [0,4,4,0] } }; }),
+    barWidth: '60%',
+    label: { show: true, position: 'right', fontSize: 10, formatter: '{c}d' }
+  }]
+});
+
+initChart('chart-recencia-distribuicao', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 10, right: 10, bottom: 24, left: 40 },
+  xAxis: { type: 'category', data: ['0-7d','8-15d','16-30d','31-60d','61-90d','91-180d','181-365d','365d+'], axisLabel: { fontSize: 9, rotate: 30 } },
+  yAxis: { type: 'value', axisLabel: { fontSize: 10 } },
+  series: [{
+    type: 'bar',
+    data: [15, 22, 28, 18, 10, 5, 2, 1].map(function(v, i) {
+      var cor = i <= 2 ? '#0045A3' : i <= 4 ? '#80BCFF' : i <= 6 ? '#E67E00' : '#C62828';
+      return { value: v * Math.round(r(180, 250)), itemStyle: { color: cor, borderRadius: [4,4,0,0] } };
+    }),
+    barWidth: '65%',
+    label: { show: true, position: 'top', fontSize: 9, fontWeight: 600 }
+  }]
+});
+
+initChart('chart-engajamento-score-perfil', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 5, right: 30, bottom: 5, left: 85 },
+  xAxis: { type: 'value', min: 0, max: 100, axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'category', data: perfis, inverse: true, axisLabel: { fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+  series: [{
+    type: 'bar',
+    data: perfis.map(function(p, i) { return { value: r(55, 90), itemStyle: { color: coresPerfil[i], borderRadius: [0,4,4,0] } }; }),
+    barWidth: '55%',
+    label: { show: true, position: 'right', fontSize: 10, fontWeight: 600 }
+  }]
+});
+
+initChart('chart-engajamento-interacoes', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 5, right: 30, bottom: 5, left: 85 },
+  xAxis: { type: 'value', axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'category', data: perfis, inverse: true, axisLabel: { fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+  series: [{
+    type: 'bar',
+    data: perfis.map(function(p, i) { return { value: r(80, 350), itemStyle: { color: coresPerfil[i], borderRadius: [0,4,4,0] } }; }),
+    barWidth: '55%',
+    label: { show: true, position: 'right', fontSize: 10, fontWeight: 600 }
+  }]
+});
+
+initChart('chart-engajamento-atendimentos', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 5, right: 30, bottom: 5, left: 85 },
+  xAxis: { type: 'value', axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'category', data: perfis, inverse: true, axisLabel: { fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+  series: [{
+    type: 'bar',
+    data: perfis.map(function(p, i) { return { value: r(20, 120), itemStyle: { color: coresPerfil[i], borderRadius: [0,4,4,0] } }; }),
+    barWidth: '55%',
+    label: { show: true, position: 'right', fontSize: 10, fontWeight: 600 }
+  }]
+});
+
+initChart('chart-engajamento-conclusao', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 5, right: 10, bottom: 24, left: 40 },
+  xAxis: { type: 'category', data: perfis, axisLabel: { fontSize: 9 }, axisLine: { show: false }, axisTick: { show: false } },
+  yAxis: { type: 'value', min: 0, max: 100, axisLabel: { fontSize: 10, formatter: '{value}%' } },
+  series: [{
+    type: 'bar',
+    data: perfis.map(function(p, i) { return { value: r(35, 75), itemStyle: { color: coresPerfil[i], borderRadius: [4,4,0,0] } }; }),
+    barWidth: '50%',
+    label: { show: true, position: 'top', fontSize: 9, fontWeight: 600, formatter: '{c}%' }
+  }]
+});
+
+// ========== ACT 3 – Overlap ==========
+
+var grafCamp = ['Camp. A','Camp. B','Camp. C','Camp. D','Camp. E','Camp. F','Camp. G','Camp. H'];
+var grafCat = ['Aquisição','CRM','Segmentada'];
+initChart('chart-overlap-matriz', {
+  tooltip: { formatter: function(p) { if (p.dataType === 'edge') return '<b>' + p.data.source + ' → ' + p.data.target + '</b><br/>Overlap: ' + p.data.value + '%'; return '<b>' + p.name + '</b><br/>Alcance: ~' + p.value + 'K contatos'; } },
+  legend: { data: grafCat, bottom: 0, icon: 'circle', itemWidth: 8, itemHeight: 8, textStyle: { fontSize: 10 } },
+  series: [{
+    type: 'graph', layout: 'force',
+    force: { repulsion: 350, edgeLength: [80, 150], gravity: 0.1, friction: 0.2 },
+    roam: true, draggable: true,
+    label: { show: true, position: 'bottom', fontSize: 9, color: '#333', fontWeight: 500 },
+    edgeLabel: { show: true, formatter: function(p){ return p.data.value + '%'; }, fontSize: 9, color: '#666', opacity: 0.7 },
+    edgeSymbol: ['none', 'none'],
+    categories: [
+      { name: 'Aquisição', itemStyle: { color: '#0045A3' } },
+      { name: 'CRM', itemStyle: { color: '#00897B' } },
+      { name: 'Segmentada', itemStyle: { color: '#E67E00' } }
+    ],
+    data: [
+      { name: 'Camp. A', value: 42, category: 0, symbolSize: 62 },
+      { name: 'Camp. B', value: 38, category: 2, symbolSize: 56 },
+      { name: 'Camp. C', value: 32, category: 0, symbolSize: 50 },
+      { name: 'Camp. D', value: 30, category: 2, symbolSize: 48 },
+      { name: 'Camp. E', value: 35, category: 1, symbolSize: 52 },
+      { name: 'Camp. F', value: 28, category: 2, symbolSize: 44 },
+      { name: 'Camp. G', value: 24, category: 1, symbolSize: 40 },
+      { name: 'Camp. H', value: 18, category: 2, symbolSize: 34 }
+    ],
+    edges: [
+      { source: 'Camp. A', target: 'Camp. E', value: 42, lineStyle: { width: 5, color: '#C62828', opacity: 0.7, curveness: 0.2 } },
+      { source: 'Camp. C', target: 'Camp. F', value: 34, lineStyle: { width: 4, color: '#E67E00', opacity: 0.6, curveness: 0.2 } },
+      { source: 'Camp. B', target: 'Camp. D', value: 31, lineStyle: { width: 3.5, color: '#E67E00', opacity: 0.6, curveness: 0.2 } },
+      { source: 'Camp. B', target: 'Camp. F', value: 30, lineStyle: { width: 3.5, color: '#E67E00', opacity: 0.6, curveness: 0.2 } },
+      { source: 'Camp. A', target: 'Camp. C', value: 28, lineStyle: { width: 3, color: '#80BCFF', opacity: 0.5, curveness: 0.2 } },
+      { source: 'Camp. B', target: 'Camp. G', value: 28, lineStyle: { width: 3, color: '#80BCFF', opacity: 0.5, curveness: 0.2 } },
+      { source: 'Camp. E', target: 'Camp. G', value: 25, lineStyle: { width: 2.5, color: '#80BCFF', opacity: 0.5, curveness: 0.2 } },
+      { source: 'Camp. C', target: 'Camp. H', value: 24, lineStyle: { width: 2.5, color: '#80BCFF', opacity: 0.5, curveness: 0.2 } },
+      { source: 'Camp. D', target: 'Camp. H', value: 22, lineStyle: { width: 2, color: '#80BCFF', opacity: 0.4, curveness: 0.2 } },
+      { source: 'Camp. D', target: 'Camp. B', value: 22, lineStyle: { width: 2, color: '#80BCFF', opacity: 0.4, curveness: 0.2 } },
+      { source: 'Camp. A', target: 'Camp. B', value: 18, lineStyle: { width: 1.5, color: '#ccc', opacity: 0.4, curveness: 0.2 } },
+      { source: 'Camp. E', target: 'Camp. F', value: 15, lineStyle: { width: 1.5, color: '#ccc', opacity: 0.4, curveness: 0.2 } }
+    ],
+    lineStyle: { curveness: 0.2 },
+    emphasis: { focus: 'adjacency', lineStyle: { width: 4 } }
+  }]
+});
+
+initChart('chart-overlap-freq', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 10, right: 10, bottom: 24, left: 40 },
+  xAxis: { type: 'category', data: ['1','2','3','4','5+'], axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', axisLabel: { fontSize: 10 } },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: 38400, itemStyle: { color: '#0045A3', borderRadius: [4,4,0,0] } },
+      { value: 22100, itemStyle: { color: '#80BCFF', borderRadius: [4,4,0,0] } },
+      { value: 12800, itemStyle: { color: '#00897B', borderRadius: [4,4,0,0] } },
+      { value: 5400, itemStyle: { color: '#E67E00', borderRadius: [4,4,0,0] } },
+      { value: 2100, itemStyle: { color: '#C62828', borderRadius: [4,4,0,0] } }
+    ],
+    barWidth: '55%',
+    label: { show: true, position: 'top', fontSize: 9, fontWeight: 600 }
+  }]
+});
+
+(function() {
+  var sets = [
+    { set: 'Camp. A · Camp. E', n: 2, overlap: 42, contatos: 8200 },
+    { set: 'Camp. B · Camp. D · Camp. G', n: 3, overlap: 31, contatos: 5400 },
+    { set: 'Camp. C · Camp. F', n: 2, overlap: 34, contatos: 6100 },
+    { set: 'Camp. A · Camp. C · Camp. E', n: 3, overlap: 28, contatos: 4700 },
+    { set: 'Camp. D · Camp. H · Camp. B · Camp. F', n: 4, overlap: 22, contatos: 3200 },
+    { set: 'Camp. E · Camp. G · Camp. A', n: 3, overlap: 25, contatos: 4100 },
+    { set: 'Camp. B · Camp. F', n: 2, overlap: 30, contatos: 4800 },
+    { set: 'Camp. C · Camp. H · Camp. D', n: 3, overlap: 24, contatos: 3600 }
+  ];
+  var html = '<table><thead><tr><th>#</th><th>Conjunto de Campanhas</th><th>Camp.</th><th>% Overlap</th><th>Contatos</th></tr></thead><tbody>';
+  sets.forEach(function(d, i) {
+    var cor = d.overlap >= 40 ? 'var(--red)' : d.overlap >= 28 ? '#E67E00' : 'var(--gray-50)';
+    html += '<tr><td>' + (i+1) + '</td><td style="font-size:var(--fs-xs);">' + d.set + '</td><td>' + d.n + '</td><td style="color:' + cor + ';font-weight:600;">' + d.overlap + '%</td><td>' + d.contatos.toLocaleString() + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('table-overlap-pares').innerHTML = html;
+})();
+
+// ========== ACT 3 – Hist. Campanhas ==========
+
+initChart('chart-hist-campanhas-mes', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 24, right: 10, bottom: 28, left: 40 },
+  xAxis: { type: 'category', data: meses, axisLabel: { fontSize: 9 } },
+  yAxis: { type: 'value', axisLabel: { fontSize: 10 } },
+  series: [{
+    type: 'bar',
+    data: meses.map(function(){return Math.round(r(3, 12));}),
+    itemStyle: { color: '#0045A3', borderRadius: [4,4,0,0] },
+    barWidth: '50%',
+    label: { show: true, position: 'top', fontSize: 9, fontWeight: 600 }
+  }]
+});
+
+initChart('chart-hist-contatos', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 24, right: 10, bottom: 28, left: 45 },
+  xAxis: { type: 'category', data: ['<1K','1-5K','5-15K','15-50K','50K+'], axisLabel: { fontSize: 9 } },
+  yAxis: { type: 'value', axisLabel: { fontSize: 10 } },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: 5, itemStyle: { color: '#C62828', borderRadius: [4,4,0,0] } },
+      { value: 12, itemStyle: { color: '#E67E00', borderRadius: [4,4,0,0] } },
+      { value: 18, itemStyle: { color: '#80BCFF', borderRadius: [4,4,0,0] } },
+      { value: 9, itemStyle: { color: '#00897B', borderRadius: [4,4,0,0] } },
+      { value: 3, itemStyle: { color: '#0045A3', borderRadius: [4,4,0,0] } }
+    ],
+    barWidth: '50%',
+    label: { show: true, position: 'top', fontSize: 9, fontWeight: 600 }
+  }]
+});
+
+var saturacaoData = [
+  { uf: 'SP', val: 3.7 }, { uf: 'MG', val: 3.2 }, { uf: 'RJ', val: 2.8 },
+  { uf: 'BA', val: 2.5 }, { uf: 'RS', val: 2.3 }, { uf: 'PR', val: 2.1 },
+  { uf: 'SC', val: 1.9 }, { uf: 'PE', val: 1.7 }, { uf: 'CE', val: 1.6 }, { uf: 'DF', val: 1.5 }
+].sort(function(a,b){ return b.val - a.val; });
+
+initChart('chart-hist-saturacao', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 10, right: 30, bottom: 5, left: 35 },
+  xAxis: { type: 'value', axisLabel: { fontSize: 10, formatter: '{value}' } },
+  yAxis: { type: 'category', data: saturacaoData.map(function(d){ return d.uf; }), inverse: false, axisLabel: { fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+  series: [{
+    type: 'bar',
+    data: saturacaoData.map(function(d, i) { return { value: d.val, itemStyle: { color: i < 3 ? '#C62828' : '#00897B', borderRadius: [0,4,4,0] } }; }),
+    barWidth: '60%',
+    label: { show: true, position: 'right', fontSize: 10, fontWeight: 600, formatter: function(p) { return p.value.toFixed(1); } }
+  }]
+});
+</script>
+</body>
+</html>

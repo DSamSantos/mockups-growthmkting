@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sebrae BI — Dash Contratos</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="_shared/design-system.css">
+<style>
+/* ========== DC-SPECIFIC ========== */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--white);
+  border: 1px solid var(--gray-20);
+  border-radius: var(--radius-md);
+}
+.filter-select {
+  padding: 5px 10px;
+  font-size: var(--fs-sm);
+  border: 1px solid var(--gray-30);
+  border-radius: 4px;
+  background: var(--white);
+  color: var(--gray-70);
+  cursor: pointer;
+  min-width: 100px;
+}
+.filter-select:focus { outline: none; border-color: var(--blue-40); }
+.channel-snapshot {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.snap-card {
+  background: var(--white);
+  border: 1px solid var(--gray-20);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  border-top: 3px solid transparent;
+}
+.snap-card.email { border-top-color: var(--blue-60); }
+.snap-card.sms { border-top-color: var(--red); }
+.snap-card.whatsapp { border-top-color: var(--green); }
+.snap-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--gray-80);
+}
+.snap-metrics { display: flex; flex-direction: column; gap: 8px; }
+.snap-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--fs-sm);
+}
+.snap-row .lbl { color: var(--gray-50); }
+.snap-row .val { font-weight: 600; color: var(--gray-80); }
+.snap-progress { margin: 8px 0 4px; }
+.snap-progress .progress-bar { height: 5px; }
+
+/* Status Table — unified (fundido: Goal + Consolidated) */
+.status-table { font-size: var(--fs-sm); width: 100%; }
+.status-table th { text-align: left; padding: 8px 10px; font-weight: 600; color: var(--gray-50); border-bottom: 2px solid var(--gray-20); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.3px; }
+.status-table td { padding: 8px 10px; border-bottom: 1px solid var(--gray-10); color: var(--gray-70); vertical-align: middle; }
+.status-table tr:last-child td { border-bottom: none; }
+.status-table .status-label { display: flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
+.status-table .status-label svg { width: 16px; height: 16px; }
+.status-table .status-bar { display: inline-block; width: 80px; height: 6px; background: var(--gray-20); border-radius: 3px; overflow: hidden; vertical-align: middle; }
+.status-table .status-bar .status-fill { height: 100%; border-radius: 3px; }
+.status-table .status-highlight { font-weight: 700; }
+.status-row-alert td:first-child { border-left: 3px solid var(--red); }
+.status-row-alert .status-label { color: var(--red); }
+.status-row-under td:first-child { border-left: 3px solid var(--green); }
+.status-row-under .status-label { color: var(--green); }
+.status-row-normal td:first-child { border-left: 3px solid var(--gray-40); }
+.status-row-normal .status-label { color: var(--gray-60); }
+.status-highlight { color: var(--red); font-weight: 700; }
+
+/* Status Badges */
+.status-badge { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 2px 8px; border-radius: 3px; }
+.status-badge.status-neutral { background: var(--gray-10); color: var(--gray-60); }
+.status-badge.status-green { background: var(--green-bg); color: var(--green); }
+.status-badge.status-red { background: var(--red-bg); color: var(--red); }
+
+/* Alert Tags */
+.alert-tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
+.alert-tag.alert-amber { background: var(--amber-bg); color: #735A00; }
+.alert-tag.alert-red { background: var(--red-bg); color: var(--red); }
+.alert-tag.alert-green { background: var(--green-bg); color: var(--green); }
+.alert-tag.alert-gray { background: var(--gray-10); color: var(--gray-60); }
+
+/* Insight Callout — data storytelling */
+.insight-callout {
+  background: linear-gradient(135deg, var(--blue-10), var(--white));
+  border: 1px solid var(--blue-20, #B3D4FF);
+  border-left: 4px solid var(--blue-60);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.insight-callout .insight-icon {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  background: var(--blue-10);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--blue-60);
+}
+.insight-callout .insight-body { flex: 1; font-size: var(--fs-sm); color: var(--gray-70); line-height: 1.6; }
+.insight-callout .insight-body strong { color: var(--gray-80); }
+
+/* Scenario table per-channel */
+.scenario-table { font-size: var(--fs-sm); width: 100%; }
+.scenario-table th { text-align: left; padding: 8px 10px; font-weight: 600; color: var(--gray-50); border-bottom: 2px solid var(--gray-20); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.3px; }
+.scenario-table td { padding: 8px 10px; border-bottom: 1px solid var(--gray-10); color: var(--gray-70); }
+.scenario-table tr:last-child td { border-bottom: none; }
+.sort-icon { cursor: pointer; margin-left: 4px; opacity: 0.5; }
+.sort-icon:hover, .sort-icon.active { opacity: 1; }
+.proposal-banner {
+  background: linear-gradient(135deg, var(--blue-10), var(--white));
+  border: 1px solid var(--blue-30);
+  border-left: 4px solid var(--blue-60);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.proposal-banner .banner-icon {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  background: var(--blue-60);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+}
+.proposal-banner .banner-body { flex: 1; }
+.proposal-banner .banner-title { font-size: var(--fs-md); font-weight: 700; color: var(--blue-70); margin-bottom: 4px; }
+.proposal-banner .banner-text { font-size: var(--fs-sm); color: var(--gray-60); line-height: 1.5; }
+.proposal-banner .banner-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  padding: 2px 8px;
+  border-radius: 3px;
+  margin-top: 6px;
+}
+.data-table td { white-space: nowrap; }
+.data-table td:first-child { font-weight: 600; color: var(--gray-80); }
+.progress-inline {
+  display: inline-block;
+  width: 60px;
+  height: 4px;
+  background: var(--gray-20);
+  border-radius: 2px;
+  overflow: hidden;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.progress-inline .fill {
+  height: 100%;
+  border-radius: 2px;
+}
+.kpi-card[title] { position: relative; cursor: help; }
+.kpi-card[title]:hover::after {
+  content: attr(title);
+  position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  background: var(--gray-80); color: var(--white); padding: 6px 10px;
+  border-radius: 4px; font-size: 11px; font-weight: 400; line-height: 1.4;
+  white-space: normal; max-width: 260px; text-align: center; z-index: 100;
+  box-shadow: var(--shadow-md); pointer-events: none;
+}
+.row-2 { grid-template-columns: 1fr 1fr; }
+
+/* Detail table row coloring */
+#tableBody tr.alert { background: #FFF5F5; }
+#tableBody tr.alert td:first-child { border-left: 3px solid var(--red); }
+#tableBody tr.warning { background: #FFF8E1; }
+#tableBody tr.warning td:first-child { border-left: 3px solid var(--amber); }
+#tableBody tr.under { background: #F1F8E9; }
+#tableBody tr.under td:first-child { border-left: 3px solid var(--green); }
+
+/* Channel group header row in scenario table */
+.scenario-table .channel-group td { font-weight: 700; color: var(--gray-80); background: var(--gray-10); }
+@media (max-width: 1024px) {
+  .channel-snapshot { grid-template-columns: 1fr; }
+  .row-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .filter-bar { flex-direction: column; align-items: stretch; }
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">S</div>
+    <h1>Sebrae BI</h1>
+    <span class="badge">TO-BE</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="Home.html">
+      <span class="icon" data-lucide="layout-dashboard"></span>
+      Home
+    </a>
+    <a class="nav-item" href="D10-D12_executive.html">
+      <span class="icon" data-lucide="bar-chart-3"></span>
+      Painel Estratégico
+    </a>
+    <a class="nav-item active" href="DC_Contratos.html">
+      <span class="icon" data-lucide="file-text"></span>
+      Dash Contratos
+    </a>
+    <a class="nav-item" href="Base_de_Leads.html">
+      <span class="icon" data-lucide="route"></span>
+      Base de Leads
+    </a>
+    <a class="nav-item" href="D13_Campanhas.html">
+      <span class="icon" data-lucide="megaphone"></span>
+      Campanhas
+    </a>
+    <a class="nav-item" href="D9_Performance.html">
+      <span class="icon" data-lucide="layers"></span>
+      Performance Multicanal
+    </a>
+  </nav>
+</aside>
+
+<div class="main">
+  <header class="header">
+    <div class="header-left">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <span data-lucide="menu" style="width:22px;height:22px;"></span>
+      </button>
+      <span class="breadcrumb">Sebrae BI / <strong id="pageTitle">Dash Contratos</strong></span>
+    </div>
+    <div class="header-right">
+      <span class="phase">Fase 2 — Dashboards</span>
+      <span>v0.4</span>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page active" id="page-dc">
+
+      <!-- PAGE HEADER -->
+      <div class="page-header">
+        <h2>Dash Contratos</h2>
+        <p>Gestão de Créditos & Pacing — Monitoramento de consumo contratado por canal de disparo</p>
+      </div>
+
+      <!-- PROPOSAL BANNER: Sub-Contas Virtuais -->
+      <div class="proposal-banner">
+        <div class="banner-icon"><span data-lucide="lightbulb" style="width:18px;height:18px;"></span></div>
+        <div class="banner-body">
+          <div class="banner-title">Proposta — Sub-Contas Virtuais por BU</div>
+          <div class="banner-text">
+            Como múltiplas BUs consomem do mesmo pool de créditos sem alocação prévia, propomos dividir cada contrato principal em <strong>sub-contas virtuais por BU</strong>: cada BU teria visibilidade clara de seu saldo, consumo e alertas, sem rateio retroativo. A implementação depende de validação com o Sebrae.
+          </div>
+          <span class="banner-tag">Proposta — Aguardando Validação</span>
+        </div>
+      </div>
+
+
+
+      <!-- FILTER BAR (Camada 0) -->
+      <div class="filter-bar">
+        <select class="filter-select" id="filterPeriod">
+          <option>Últimos 12 meses</option>
+          <option>Últimos 6 meses</option>
+          <option>Últimos 3 meses</option>
+          <option selected>Ano atual</option>
+        </select>
+        <select class="filter-select" id="filterChannel">
+          <option value="all">Todos os canais</option>
+          <option value="email">Email</option>
+          <option value="sms">SMS</option>
+          <option value="whatsapp">WhatsApp</option>
+        </select>
+        <select class="filter-select" id="filterBu">
+          <option value="all">Todas as BUs</option>
+          <option value="nacional">Nacional</option>
+          <option value="sp">SP</option>
+          <option value="rj">RJ</option>
+          <option value="mg">MG</option>
+          <option value="outras">Outras UFs</option>
+        </select>
+        <select class="filter-select" id="filterProfile">
+          <option value="all">Todos os perfis</option>
+          <option value="mei">MEI</option>
+          <option value="epp">EPP</option>
+          <option value="me">ME</option>
+        </select>
+        <select class="filter-select" id="filterUf">
+          <option value="all">Todas as UFs</option>
+          <option value="ac">AC</option><option value="al">AL</option><option value="am">AM</option><option value="ap">AP</option>
+          <option value="ba">BA</option><option value="ce">CE</option><option value="df">DF</option><option value="es">ES</option>
+          <option value="go">GO</option><option value="ma">MA</option><option value="mg">MG</option><option value="ms">MS</option>
+          <option value="mt">MT</option><option value="pa">PA</option><option value="pb">PB</option><option value="pe">PE</option>
+          <option value="pi">PI</option><option value="pr">PR</option><option value="rj">RJ</option><option value="rn">RN</option>
+          <option value="ro">RO</option><option value="rr">RR</option><option value="rs">RS</option><option value="sc">SC</option>
+          <option value="se">SE</option><option value="sp">SP</option><option value="to">TO</option>
+        </select>
+      </div>
+
+      <!-- Camada 1 — RESUMO (KPI CARDS) -->
+      <div class="kpi-grid" id="kpiGrid">
+        <div class="kpi-card" title="28,5M créditos contratados ao total. Distribuição: WhatsApp 14,1M (49,5%), Email 10,2M (35,8%), SMS 4,2M (14,7%). Vigência média dos contratos: 12 meses.">
+          <div class="label">Saldo Contratado</div>
+          <div class="value" id="kpiContratado">28.5M</div>
+          <div class="sub">créditos contratados</div>
+        </div>
+        <div class="kpi-card" title="16,2M créditos disponíveis (56,8% do total). Ritmo atual de consumo projeta esgotamento do WhatsApp em Out/2026 — 6 meses antes do previsto no plano. SMS com folga de 81,8%.">
+          <div class="label">Saldo Restante</div>
+          <div class="value" id="kpiRestante">16.2M</div>
+          <div class="sub">56.8% do total</div>
+          <div class="progress-bar" style="margin-top:8px;"><div class="progress-fill" style="width:56.8%;background:var(--blue-60);"></div></div>
+        </div>
+        <div class="kpi-card" title="43,2% dos créditos já utilizados em Jun/26 (54,2% do prazo decorrido). WhatsApp lidera com 62,8% — acima do pacing ideal. SMS em subconsumo com 18,2% — abaixo do esperado para o período.">
+          <div class="label">% Consumo</div>
+          <div class="value" style="color:var(--amber);" id="kpiConsumo">43.2%</div>
+          <div class="change neutral">12.3M créditos utilizados</div>
+        </div>
+        <div class="kpi-card" title="104 dias úteis restantes (45% do prazo decorrido). Para não exceder o contrato, o pacing médio necessário é de 24,2K/dia. WhatsApp já está 18% acima desse limite.">
+          <div class="label">Dias Úteis Restantes</div>
+          <div class="value" id="kpiDias">104</div>
+          <div class="change down">↓ 45% do prazo decorrido</div>
+        </div>
+        <div class="kpi-card" title="R$ 0,042/crédito — média ponderada entre canais. Variação: WhatsApp ~R$ 0,038 (mais eficiente), SMS ~R$ 0,045, Email ~R$ 0,048. Custo 11% menor que período anterior.">
+          <div class="label">Custo por Crédito</div>
+          <div class="value" style="color:var(--green);" id="kpiCusto">R$ 0,042</div>
+          <div class="change neutral">média ponderada entre canais</div>
+        </div>
+      </div>
+
+      <!-- Camada 2 — SNAPSHOT POR CANAL (3 cards: Email, SMS, WhatsApp) -->
+      <div class="channel-snapshot" id="channelSnapshot">
+        <div class="snap-card email">
+          <div class="snap-header"><span data-lucide="mail" style="width:20px;height:20px;color:var(--blue-60);"></span> Email</div>
+          <div class="snap-metrics">
+            <div class="snap-row"><span class="lbl">% Consumo</span><span class="val" style="color:var(--blue-60)">38.5%</span></div>
+            <div class="snap-progress"><div class="progress-bar"><div class="progress-fill" style="width:38.5%;background:var(--blue-60);"></div></div></div>
+            <div class="snap-row"><span class="lbl">Pacing</span><span class="val">12.4K/dia (ideal: 11.8K)</span></div>
+            <div class="snap-row"><span class="lbl">Dias úteis rest.</span><span class="val">104</span></div>
+            <div class="snap-row"><span class="lbl">Saldo restante</span><span class="val">7.8M</span></div>
+            <div class="snap-row"><span class="lbl">Proj. esgotamento (plano)</span><span class="val">Fev/2027</span></div>
+            <div class="snap-row"><span class="lbl">Proj. esgotamento (tendência)</span><span class="val">Dez/2026</span></div>
+          </div>
+        </div>
+        <div class="snap-card sms">
+          <div class="snap-header"><span data-lucide="smartphone" style="width:20px;height:20px;color:var(--red);"></span> SMS</div>
+          <div class="snap-metrics">
+            <div class="snap-row"><span class="lbl">% Consumo</span><span class="val" style="color:var(--green)">18.2%</span></div>
+            <div class="snap-progress"><div class="progress-bar"><div class="progress-fill" style="width:18.2%;background:var(--green);"></div></div></div>
+            <div class="snap-row"><span class="lbl">Pacing</span><span class="val">3.2K/dia (ideal: 5.8K)</span></div>
+            <div class="snap-row"><span class="lbl">Dias úteis rest.</span><span class="val">104</span></div>
+            <div class="snap-row"><span class="lbl">Saldo restante</span><span class="val">3.4M</span></div>
+            <div class="snap-row"><span class="lbl">Proj. esgotamento (plano)</span><span class="val">Sem esgotamento previsto</span></div>
+            <div class="snap-row"><span class="lbl">Proj. esgotamento (tendência)</span><span class="val">Sem esgotamento previsto</span></div>
+          </div>
+        </div>
+        <div class="snap-card whatsapp">
+          <div class="snap-header"><span data-lucide="message-circle" style="width:20px;height:20px;color:var(--green);"></span> WhatsApp</div>
+          <div class="snap-metrics">
+            <div class="snap-row"><span class="lbl">% Consumo</span><span class="val" style="color:var(--amber)">62.8%</span></div>
+            <div class="snap-progress"><div class="progress-bar"><div class="progress-fill" style="width:62.8%;background:var(--amber);"></div></div></div>
+            <div class="snap-row"><span class="lbl">Pacing</span><span class="val">28.6K/dia (ideal: 24.2K)</span></div>
+            <div class="snap-row"><span class="lbl">Dias úteis rest.</span><span class="val">104</span></div>
+            <div class="snap-row"><span class="lbl">Saldo restante</span><span class="val">5.0M</span></div>
+            <div class="snap-row"><span class="lbl">Proj. esgotamento (plano)</span><span class="val">Abr/2027</span></div>
+            <div class="snap-row"><span class="lbl">Proj. esgotamento (tendência)</span><span class="val">Out/2026</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INSIGHT CALLOUT: data storytelling -->
+      <div class="insight-callout">
+        <div class="insight-icon"><span data-lucide="info" style="width:18px;height:18px;"></span></div>
+        <div class="insight-body">
+          <strong>Insight:</strong> WhatsApp projeta esgotamento em <strong>Out/2026</strong> — 6 meses antes do previsto (Abr/2027) pelo plano contratual.
+          SMS apresenta subconsumo (18,2%): revisar planejamento de campanhas para melhor aproveitamento dos créditos.
+          Email dentro da normalidade, mas contrato renova em 60 dias.
+        </div>
+      </div>
+
+      <!-- Camada 3 — STATUS & CENÁRIOS (fundido: Goal Table + Consolidado + Cenários movido) -->
+      <div class="row row-2" style="margin-bottom:24px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Status dos Contratos</span>
+            <span class="card-subtitle">Acompanhamento consolidado por canal — alertas e projeções</span>
+          </div>
+          <table class="status-table">
+            <thead><tr><th>Canal</th><th>Status</th><th>% Consumo</th><th>Pacing (Atual / Ideal)</th><th>Proj. Plano</th><th>Proj. Tendência</th><th>Alerta</th></tr></thead>
+            <tbody>
+              <tr class="status-row-normal">
+                <td><span class="status-label"><span data-lucide="mail" style="width:16px;height:16px;"></span> Email</span></td>
+                <td><span class="status-badge status-neutral">Normal</span></td>
+                <td><span class="status-bar"><span class="status-fill" style="width:38.5%;background:var(--blue-60);"></span></span><span style="margin-left:6px;">38,5%</span></td>
+                <td>12,4K / 11,8K</td>
+                <td>Fev/2027</td>
+                <td>Dez/2026</td>
+                <td><span class="alert-tag alert-gray">Contrato a vencer (60d)</span></td>
+              </tr>
+              <tr class="status-row-under">
+                <td><span class="status-label"><span data-lucide="smartphone" style="width:16px;height:16px;"></span> SMS</span></td>
+                <td><span class="status-badge status-green">Subconsumo</span></td>
+                <td><span class="status-bar"><span class="status-fill" style="width:18.2%;background:var(--green);"></span></span><span style="margin-left:6px;">18,2%</span></td>
+                <td>3,2K / 5,8K</td>
+                <td>—</td>
+                <td>—</td>
+                <td><span class="alert-tag alert-green">Subconsumo</span></td>
+              </tr>
+              <tr class="status-row-alert">
+                <td><span class="status-label"><span data-lucide="message-circle" style="width:16px;height:16px;"></span> WhatsApp</span></td>
+                <td><span class="status-badge status-red">Crítico</span></td>
+                <td><span class="status-bar"><span class="status-fill" style="width:62.8%;background:var(--amber);"></span></span><span class="status-highlight">62,8%</span></td>
+                <td>28,6K / 24,2K</td>
+                <td>Abr/2027</td>
+                <td><span class="status-highlight">Out/2026</span></td>
+                <td><span class="alert-tag alert-amber">Ritmo acelerado</span> <span class="alert-tag alert-red">Risco de esgotamento</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Cenários de Consumo</span>
+            <span class="card-subtitle">Projeções por canal — pacing, tendência e esgotamento próprios</span>
+          </div>
+          <table class="scenario-table">
+            <thead><tr><th>Canal / Cenário</th><th>Projeção</th><th>Créditos/mês</th><th>Esgotamento</th></tr></thead>
+            <tbody>
+              <tr class="channel-group"><td colspan="4">Email</td></tr>
+              <tr><td>&nbsp;&nbsp;Pacing Ideal</td><td>Provisão contratual</td><td>1,18M</td><td>Fev/2027</td></tr>
+              <tr><td>&nbsp;&nbsp;Expectativa Ajustada</td><td>Plano de disparos × fator crédito</td><td>1,32M</td><td>Jan/2027</td></tr>
+              <tr><td>&nbsp;&nbsp;Tendência Real</td><td>Média 30 dias projetada</td><td>1,55M</td><td>Dez/2026</td></tr>
+              <tr class="channel-group"><td colspan="4">SMS</td></tr>
+              <tr><td>&nbsp;&nbsp;Pacing Ideal</td><td>Provisão contratual</td><td>0,58M</td><td>Sem esgotamento previsto</td></tr>
+              <tr><td>&nbsp;&nbsp;Expectativa Ajustada</td><td>Plano de disparos × fator crédito</td><td>0,52M</td><td>Sem esgotamento previsto</td></tr>
+              <tr><td>&nbsp;&nbsp;Tendência Real</td><td>Média 30 dias projetada</td><td>0,48M</td><td>Sem esgotamento previsto</td></tr>
+              <tr class="channel-group"><td colspan="4">WhatsApp</td></tr>
+              <tr><td>&nbsp;&nbsp;Pacing Ideal</td><td>Provisão contratual</td><td>2,42M</td><td>Abr/2027</td></tr>
+              <tr><td>&nbsp;&nbsp;Expectativa Ajustada</td><td>Plano de disparos × fator crédito</td><td>2,68M</td><td>Fev/2027</td></tr>
+              <tr><td>&nbsp;&nbsp;Tendência Real</td><td>Média 30 dias projetada</td><td>3,12M</td><td>Out/2026</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Camada 4 — PACING RELATIVO -->
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header">
+          <span class="card-title">Pacing Relativo</span>
+          <span class="card-subtitle">% do tempo decorrido vs % dos créditos consumidos — por canal</span>
+        </div>
+        <div class="chart-container chart-container-lg" id="chartPacing"></div>
+      </div>
+
+      <!-- Camada 5 — EVOLUÇÃO TEMPORAL -->
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header">
+          <span class="card-title">Evolução Temporal</span>
+          <span class="card-subtitle">Consumo mensal real vs provisão vs expectativa ajustada</span>
+        </div>
+        <div class="chart-container chart-container-lg" id="chartEvolution"></div>
+      </div>
+
+
+
+      <!-- Camada 6 — TABELA DE DETALHAMENTO com drill-down e coloração condicional -->
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header">
+          <span class="card-title">Detalhamento de Contratos</span>
+          <span class="card-subtitle">Por canal, BU e período — coloração condicional indica status de consumo</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="detailTable">
+            <thead>
+              <tr>
+                <th>Canal <span class="sort-icon" data-col="0">↕</span></th>
+                <th>BU <span class="sort-icon" data-col="1">↕</span></th>
+                <th>Mês <span class="sort-icon" data-col="2">↕</span></th>
+                <th>Tipo de Conversa</th>
+                <th>Créd. Contratados</th>
+                <th>Créd. Consumidos</th>
+                <th>%</th>
+                <th>Msgs Entregues</th>
+                <th>Fator de Consumo</th>
+                <th>Dias Úteis Rest.</th>
+                <th>Pacing</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="_shared/framework.js"></script>
+<script>
+// ========== MOCK DATA ==========
+var tableData = [
+  ['Email','Nacional','Jun/26','Marketing','3.200.000','1.120.000','35,0%','1.244.444','0,90','104','12.400'],
+  ['Email','SP','Jun/26','Marketing','1.800.000','680.000','37,8%','755.555','0,90','104','11.200'],
+  ['Email','RJ','Jun/26','Utility','800.000','420.000','52,5%','525.000','0,80','104','8.600'],
+  ['SMS','Nacional','Jun/26','Marketing','2.400.000','380.000','15,8%','475.000','0,80','104','3.200'],
+  ['SMS','MG','Jun/26','Marketing','900.000','210.000','23,3%','262.500','0,80','104','2.800'],
+  ['WhatsApp','Nacional','Jun/26','Marketing','3.800.000','2.480.000','65,3%','2.480.000','1,00','104','28.600'],
+  ['WhatsApp','SP','Jun/26','Marketing','2.200.000','1.540.000','70,0%','1.540.000','1,00','104','31.200'],
+  ['WhatsApp','Nacional','Jun/26','Utility','1.500.000','820.000','54,7%','911.111','0,90','104','18.400'],
+  ['WhatsApp','RJ','Jun/26','Service','800.000','560.000','70,0%','622.222','0,90','104','14.800'],
+  ['Email','Nacional','Mai/26','Marketing','3.200.000','1.050.000','32,8%','1.166.666','0,90','—','11.800'],
+  ['WhatsApp','Nacional','Mai/26','Marketing','3.800.000','2.280.000','60,0%','2.280.000','1,00','—','26.400'],
+  ['SMS','Nacional','Mai/26','Marketing','2.400.000','350.000','14,6%','437.500','0,80','—','2.900']
+];
+
+// Status thresholds for row coloring
+function getRowStatus(row) {
+  var pct = parseFloat(row[6].replace(',','.'));
+  var canal = row[0];
+  if (canal === 'WhatsApp' && pct > 60) return 'alert';        // red-ish: risco
+  if (canal === 'WhatsApp' && pct > 50) return 'warning';      // amber: acelerado
+  if (canal === 'SMS' && pct < 25) return 'under';             // green: subconsumo
+  if (canal === 'Email' && pct > 45) return 'warning';
+  return '';
+}
+
+function renderTableData(data) {
+  var h = '';
+  for (var r = 0; r < data.length; r++) {
+    var statusClass = getRowStatus(data[r]);
+    h += '<tr class="' + statusClass + '">';
+    for (var c = 0; c < data[r].length; c++) {
+      h += '<td>' + data[r][c] + '</td>';
+    }
+    h += '</tr>';
+  }
+  document.getElementById('tableBody').innerHTML = h;
+}
+renderTableData(tableData);
+
+// ========== SORT TABLE ==========
+document.querySelectorAll('.sort-icon').forEach(function(el) {
+  el.addEventListener('click', function() {
+    var col = parseInt(this.dataset.col);
+    var dir = this.classList.toggle('active') ? 1 : -1;
+    tableData.sort(function(a, b) {
+      var va = parseFloat(a[col].replace(/[^0-9,.-]/g,'').replace(',','.')) || a[col];
+      var vb = parseFloat(b[col].replace(/[^0-9,.-]/g,'').replace(',','.')) || b[col];
+      if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+      return a[col].localeCompare(b[col]) * dir;
+    });
+    renderTableData(tableData);
+  });
+});
+
+// ========== CHARTS ==========
+
+// Chart 1: Pacing Relativo
+initChart('chartPacing', {
+  tooltip: { trigger: 'axis', formatter: function(p) {
+    var s = '<b>' + p[0].axisValue + '</b>';
+    for (var i = 0; i < p.length; i++) {
+      if (p[i].value === null || p[i].value === undefined) continue;
+      s += '<br/>' + p[i].marker + ' ' + p[i].seriesName + ': ' + p[i].value + '%';
+    }
+    return s;
+  }},
+  legend: { data: ['% Tempo Decorrido', 'Alerta 110%', '% Consumo Email', '% Consumo SMS', '% Consumo WhatsApp'], bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { top: 10, right: 40, bottom: 55, left: 50 },
+  xAxis: { type: 'category', data: ['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26','Jun/26','Jul/26','Ago/26'], axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', max: 100, axisLabel: { fontSize: 11, formatter: '{value}%' } },
+  series: [
+    { name: '% Tempo Decorrido', type: 'line', data: [12.5, 20.8, 29.2, 37.5, 45.8, 54.2, 62.5, 70.8], lineStyle: { width: 2.5, type: 'dashed', color: '#A0A0A0' }, symbol: 'none', silent: true },
+    { name: 'Alerta 110%', type: 'line', data: [13.8, 22.9, 32.1, 41.3, 50.4, 59.6, 68.8, 77.9], lineStyle: { width: 1.5, type: 'dashed', color: '#C62828' }, symbol: 'none', silent: true },
+    { name: '% Consumo Email', type: 'line', data: [8.0, 15.0, 22.0, 28.0, 33.0, 38.5, null, null], smooth: true, lineStyle: { width: 2, color: '#0060DF' }, symbol: 'circle', symbolSize: 6, color: '#0060DF', connectNulls: false },
+    { name: '% Consumo SMS', type: 'line', data: [3.0, 6.0, 9.0, 12.0, 15.0, 18.2, null, null], smooth: true, lineStyle: { width: 2, color: '#FF9400' }, symbol: 'circle', symbolSize: 6, color: '#FF9400', connectNulls: false },
+    { name: '% Consumo WhatsApp', type: 'line', data: [15.0, 25.0, 35.0, 44.0, 53.0, 62.8, null, null], smooth: true, lineStyle: { width: 2, color: '#00897B' }, symbol: 'circle', symbolSize: 6, color: '#00897B', connectNulls: false }
+  ]
+});
+
+// Chart 2: Evolução Temporal
+initChart('chartEvolution', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) {
+    var s = '<b>' + p[0].axisValue + '</b>';
+    for (var i = 0; i < p.length; i++) {
+      var v = p[i].value;
+      if (v === null || v === undefined) continue;
+      if (p[i].seriesName === 'Consumo Real') s += '<br/>' + p[i].marker + ' Consumo Real: ' + v.toFixed(2) + 'M créditos';
+      else if (p[i].seriesName === 'Provisão Mensal') s += '<br/>' + p[i].marker + ' Provisão Mensal: ' + v.toFixed(2) + 'M créditos/mês';
+      else if (p[i].seriesName === 'Expectativa Ajustada') s += '<br/>' + p[i].marker + ' Expectativa Ajustada: ' + v.toFixed(2) + 'M créditos';
+    }
+    return s;
+  }},
+  legend: { data: ['Consumo Real', 'Provisão Mensal', 'Expectativa Ajustada'], bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { top: 10, right: 40, bottom: 55, left: 55 },
+  xAxis: { type: 'category', data: ['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26','Jun/26','Jul/26','Ago/26','Set/26','Out/26','Nov/26','Dez/26'], axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', axisLabel: { fontSize: 11, formatter: '{value}M' }, name: 'Créditos (milhões)', nameTextStyle: { fontSize: 10, color: '#5A5A5A' } },
+  series: [
+    {
+      name: 'Consumo Real', type: 'bar', barWidth: '40%',
+      data: [
+        { value: 1.8, itemStyle: { color: '#0060DF', borderRadius: [3,3,0,0] } },
+        { value: 2.1, itemStyle: { color: '#0060DF', borderRadius: [3,3,0,0] } },
+        { value: 1.9, itemStyle: { color: '#0060DF', borderRadius: [3,3,0,0] } },
+        { value: 2.3, itemStyle: { color: '#0060DF', borderRadius: [3,3,0,0] } },
+        { value: 2.5, itemStyle: { color: '#0060DF', borderRadius: [3,3,0,0] } },
+        { value: 2.8, itemStyle: { color: '#0060DF', borderRadius: [3,3,0,0] } }
+      ]
+    },
+    {
+      name: 'Provisão Mensal', type: 'line',
+      data: [2.38, 2.38, 2.38, 2.38, 2.38, 2.38, 2.38, 2.38, 2.38, 2.38, 2.38, 2.38],
+      lineStyle: { width: 2, color: '#2E7D32', type: 'solid' }, symbol: 'none', silent: true
+    },
+    {
+      name: 'Expectativa Ajustada', type: 'line',
+      data: [null, null, null, null, null, null, 2.50, 2.55, 2.60, 2.65, 2.70, 2.75],
+      lineStyle: { width: 2, color: '#F9A825', type: 'dashed' }, symbol: 'diamond', symbolSize: 8, color: '#F9A825'
+    }
+  ]
+});
+
+// ========== RESIZE ==========
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    window.dispatchEvent(new Event('resize'));
+  }, 300);
+});
+</script>
+</body>
+</html>

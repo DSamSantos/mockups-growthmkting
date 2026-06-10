@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sebrae BI — Performance Multicanal</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="_shared/design-system.css">
+<style>
+:root {
+  --cor-sms: #0045A3; --cor-email: #00897B; --cor-wa: #2E7D32;
+  --cor-isc-green: #2E7D32; --cor-isc-yellow: #E67E00; --cor-isc-red: #C62828;
+}
+.filtros-bar { display:flex; flex-wrap:wrap; gap:10px; padding:12px 16px; background:var(--white); border:1px solid var(--gray-20); border-radius:var(--radius-md); margin-bottom:20px; align-items:center; }
+.filtros-bar .filtro-label { font-size:var(--fs-xs); font-weight:600; color:var(--gray-50); text-transform:uppercase; letter-spacing:.5px; }
+.filtros-bar select { padding:6px 10px; border:1px solid var(--gray-20); border-radius:6px; font-size:var(--fs-sm); background:white; color:var(--gray-60); }
+.filtros-bar input[type="date"] { padding:6px 10px; border:1px solid var(--gray-20); border-radius:6px; font-size:var(--fs-sm); background:white; color:var(--gray-60); }
+.tbl-wrap { overflow-x:auto; font-size:var(--fs-sm); }
+.tbl-wrap table { width:100%; border-collapse:collapse; }
+.tbl-wrap th { font-size:var(--fs-xs); color:var(--gray-50); text-transform:uppercase; letter-spacing:.3px; padding:8px 10px; text-align:left; border-bottom:2px solid var(--gray-20); font-weight:600; cursor:pointer; white-space:nowrap; }
+.tbl-wrap th:hover { color:var(--blue-60); }
+.tbl-wrap td { padding:8px 10px; border-bottom:1px solid var(--gray-10); color:var(--gray-70); white-space:nowrap; }
+.tbl-wrap tr:nth-child(even) td { background:var(--gray-05); }
+.tbl-wrap tr:hover td { background:var(--blue-05); }
+.badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:var(--fs-xs); font-weight:600; }
+.badge-green { background:var(--green-bg); color:var(--green); }
+.badge-amber { background:var(--amber-bg); color:var(--amber); }
+.badge-red { background:var(--red-bg); color:var(--red); }
+.dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:4px; vertical-align:middle; }
+.chart-container { width:100%; flex:1; min-height:300px; }
+.chart-container-sm { width:100%; flex:1; min-height:240px; }
+.chart-container-lg { width:100%; flex:1; min-height:400px; }
+.isc-semaphore { display:flex; align-items:center; gap:12px; }
+.isc-semaphore .val { font-size:48px; font-weight:800; line-height:1; }
+.isc-semaphore .lbl { font-size:var(--fs-sm); color:var(--gray-50); }
+.kpi-card .spark { height:24px; margin-top:4px; }
+.kpi-card-compact { padding:4px 10px; gap:1px; }
+.kpi-card-compact .label { font-size:11px; text-transform:uppercase; color:var(--gray-50); letter-spacing:.2px; }
+.kpi-card-compact .value { font-size:17px; font-weight:700; margin:1px 0; line-height:1.1; }
+.kpi-card-compact .change { font-size:10px; line-height:1; }
+.card-compact { padding:10px 14px; }
+.kpi-grid { gap:10px; margin-bottom:12px; }
+.kpi-card.card-compact { padding:8px 12px; }
+.kpi-card.card-compact .label { font-size:var(--fs-xs); }
+.kpi-card.card-compact .value { font-size:var(--fs-lg); margin:2px 0; }
+.kpi-card.card-compact .change { font-size:var(--fs-xs); }
+.card-compact .card-header { padding:0 0 6px; }
+.card-compact .chart-compact { min-height:140px; }
+.card-compact .value { font-size:var(--fs-lg); }
+.kpi-card-grid .card.card-compact { padding:8px 12px; }
+.kpi-card-grid .card.card-compact .chart-container-sm { min-height:100px; }
+.kpi-card-grid .card.card-compact .card-header { padding:0 0 2px; }
+#table-aba2-engajamento { height:200px; min-height:0; overflow:auto; }
+#table-aba2-engajamento > table { width:100%; border-collapse:collapse; }
+.section-header { display:flex; align-items:center; gap:8px; margin:20px 0 12px; }
+.section-header-title { font-size:var(--fs-md); font-weight:600; color:var(--gray-70); text-transform:uppercase; letter-spacing:.3px; }
+.section-header-sub { font-size:var(--fs-xs); color:var(--gray-40); }
+@media (max-width:1024px) { .row.col-4 { grid-template-columns:1fr 1fr; } }
+.vert-section { margin-bottom: 48px; }
+.section-title { font-size: var(--fs-lg); font-weight: 700; color: var(--gray-80); margin-bottom: 4px; }
+.section-desc { font-size: var(--fs-sm); color: var(--gray-50); margin-bottom: 16px; }
+.jump-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; padding: 12px 16px; background: var(--white); border: 1px solid var(--gray-20); border-radius: var(--radius-md); }
+.jump-nav a { padding: 4px 12px; border-radius: 6px; font-size: var(--fs-sm); color: var(--gray-60); text-decoration: none; border: 1px solid var(--gray-20); transition: all .2s; }
+.jump-nav a:hover { background: var(--blue-60); color: white; border-color: var(--blue-60); }
+@media (max-width:768px) { .row.col-4 { grid-template-columns:1fr; } .filtros-bar { flex-direction:column; align-items:stretch; } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">S</div>
+    <h1>Sebrae BI</h1>
+    <span class="badge">TO-BE</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="Home.html">
+      <span class="icon" data-lucide="layout-dashboard"></span>
+      Home
+    </a>
+    <a class="nav-item" href="D10-D12_executive.html">
+      <span class="icon" data-lucide="bar-chart-3"></span>
+      Painel Estratégico
+    </a>
+    <a class="nav-item" href="DC_Contratos.html">
+      <span class="icon" data-lucide="file-text"></span>
+      Dash Contratos
+    </a>
+    <a class="nav-item" href="Base_de_Leads.html">
+      <span class="icon" data-lucide="route"></span>
+      Base de Leads
+    </a>
+    <a class="nav-item" href="D13_Campanhas.html">
+      <span class="icon" data-lucide="megaphone"></span>
+      Campanhas
+    </a>
+    <a class="nav-item active" href="D9_Performance.html">
+      <span class="icon" data-lucide="layers"></span>
+      Performance Multicanal
+    </a>
+  </nav>
+</aside>
+
+<div class="main">
+  <header class="header">
+    <div class="header-left">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <span data-lucide="menu" style="width:22px;height:22px;"></span>
+      </button>
+      <span class="breadcrumb">Sebrae BI / <strong>Performance Multicanal</strong></span>
+    </div>
+    <div class="header-right">
+      <span class="phase">Fase 3 — Campanhas, Jornada e Segmentação</span>
+      <span>v0.1</span>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page active" id="page-d9">
+      <div class="page-header">
+        <h2>Performance Multicanal</h2>
+        <p>Jornada completa da campanha multicanal: a mensagem chegou? Gerou resultado? Alcançamos quem devíamos com o custo certo? Consolidado dos dashboards D07 (Disparos), D08 (Bolsões) e D09 (ESG/Performance).</p>
+      </div>
+
+      <!-- ============================================= -->
+      <!-- ATO 1: DISTRIBUIÇÃO                          -->
+      <!-- ============================================= -->
+      <div class="act-divider">
+        <span class="act-title">Distribuição</span>
+        <span class="act-subtitle">A mensagem chegou?</span>
+      </div>
+
+      <!-- ===== SEÇÃO 1: FUNIL DE ENTREGA ===== -->
+      <section class="vert-section" id="sec-funil-entrega">
+        <h3 class="section-title">Funil de Entrega</h3>
+        <p class="section-desc">Acompanhe o fluxo completo de envio: enviados, erros e entregues por canal.</p>
+        <div class="filtros-bar">
+          <span class="filtro-label">Filtros:</span>
+          <input type="date" value="2026-03-08">
+          <span style="font-size:var(--fs-xs);color:var(--gray-40);">até</span>
+          <input type="date" value="2026-06-08">
+          <select><option>Canal: Todos</option><option>SMS</option><option>Email</option><option>WhatsApp</option></select>
+          <select><option>UF: Todas</option><option>SP</option><option>MG</option><option>RJ</option><option>BA</option><option>Outras</option></select>
+          <select><option>Perfil: Todos</option><option>MEI</option><option>EPP</option><option>ME</option><option>Informal</option><option>Produtor Rural</option></select>
+          <select><option>Produto: Todos</option><option>Cursos</option><option>Capacitações</option><option>Consultoria</option><option>Crédito</option><option>Sol. Digitais</option><option>Estruturantes</option></select>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-card-compact"><div class="label">Enviados</div><div class="value">485.302</div><div class="change up"><span class="trend-icon">↑</span>8% vs mês ant.</div><div class="chart-container-sm spark" id="chart-spark-enviados"></div></div>
+          <div class="kpi-card kpi-card-compact"><div class="label">Erros</div><div class="value" style="color:#C62828;">14.206</div><div class="change down"><span class="trend-icon">↑</span>taxa 2,9%</div><div class="chart-container-sm spark" id="chart-spark-erros"></div></div>
+          <div class="kpi-card kpi-card-compact"><div class="label">Entregues</div><div class="value">471.096</div><div class="change up"><span class="trend-icon">↑</span>taxa 97,1%</div><div class="chart-container-sm spark" id="chart-spark-entregues"></div></div>
+        </div>
+
+        <div class="row col-4">
+          <div class="card card-compact">
+            <div class="card-header">
+              <span class="card-title">Envios por Canal</span>
+              <span class="card-subtitle">Volume total de disparos</span>
+            </div>
+            <div class="chart-container-sm chart-compact" id="chart-bar-envios-canal"></div>
+          </div>
+          <div class="card card-compact">
+            <div class="card-header">
+              <span class="card-title">Erros por Canal</span>
+              <span class="card-subtitle">Volume total de falhas</span>
+            </div>
+            <div class="chart-container-sm chart-compact" id="chart-bar-erros-canal"></div>
+          </div>
+          <div class="card card-compact">
+            <div class="card-header">
+              <span class="card-title">Entregues por Canal</span>
+              <span class="card-subtitle">Volume total de sucesso</span>
+            </div>
+            <div class="chart-container-sm chart-compact" id="chart-bar-entregues-canal"></div>
+          </div>
+          <div class="card card-compact">
+            <div class="card-header">
+              <span class="card-title">% Entregabilidade</span>
+              <span class="card-subtitle">Proporção de sucesso por canal</span>
+            </div>
+            <div class="chart-container-sm chart-compact" id="chart-bar-entrega-pct-canal"></div>
+          </div>
+        </div>
+
+        <div class="row col-2">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Entrega por Campanha</span>
+              <span class="card-subtitle">Métricas de entrega — clique no cabeçalho para ordenar</span>
+            </div>
+            <div class="tbl-wrap" id="table-aba1-entrega" style="max-height:240px;overflow-y:auto;"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Tipos de Erro</span>
+              <span class="card-subtitle">Falhas por categoria, canal e campanha de origem</span>
+            </div>
+            <div class="tbl-wrap" id="table-tipos-erro" style="max-height:240px;overflow-y:auto;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================= -->
+      <!-- ATO 2: PERFORMANCE                          -->
+      <!-- ============================================= -->
+      <div class="act-divider">
+        <span class="act-title">Performance</span>
+        <span class="act-subtitle">A mensagem gerou resultado?</span>
+      </div>
+
+      <!-- ===== SEÇÃO 2: ENGAJAMENTO &amp; CONVERSÃO ===== -->
+      <section class="vert-section" id="sec-engajamento">
+        <h3 class="section-title">Engajamento &amp; Conversão</h3>
+        <p class="section-desc">Aberturas, cliques, conversões e opt-outs por campanha e canal.</p>
+        <div class="filtros-bar">
+          <span class="filtro-label">Filtros:</span>
+          <input type="date" value="2026-03-08">
+          <span style="font-size:var(--fs-xs);color:var(--gray-40);">até</span>
+          <input type="date" value="2026-06-08">
+          <select><option>Canal: Todos</option><option>SMS</option><option>Email</option><option>WhatsApp</option></select>
+          <select><option>UF: Todas</option><option>SP</option><option>MG</option><option>RJ</option><option>BA</option><option>Outras</option></select>
+          <select><option>Perfil: Todos</option><option>MEI</option><option>EPP</option><option>ME</option><option>Informal</option><option>Produtor Rural</option></select>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="label">Aberturas</div><div class="value">235.548</div><div class="change up"><span class="trend-icon">↑</span>taxa 50,0%</div></div>
+          <div class="kpi-card"><div class="label">CTR</div><div class="value">3,8%</div><div class="change up"><span class="trend-icon">↑</span>0,3pp vs mês ant.</div></div>
+          <div class="kpi-card"><div class="label">CTOR</div><div class="value">7,6%</div><div class="change down"><span class="trend-icon">↓</span>0,1pp vs mês ant.</div></div>
+          <div class="kpi-card"><div class="label">Taxa Lidas (WA)</div><div class="value" style="color:var(--cor-isc-green);">68,2%</div><div class="change up"><span class="trend-icon">↑</span>2% vs mês ant.</div><div class="sub" style="color:var(--cor-isc-green);">acima de 50% ✓</div></div>
+          <div class="kpi-card"><div class="label">Taxa Conversão</div><div class="value">2,1%</div><div class="change up"><span class="trend-icon">↑</span>0,2pp vs mês ant.</div></div>
+          <div class="kpi-card"><div class="label">Taxa Opt-Out</div><div class="value" style="color:var(--cor-isc-green);">0,8%</div><div class="change down"><span class="trend-icon">↓</span>0,1pp vs mês ant.</div><div class="sub" style="color:var(--cor-isc-green);">abaixo de 2% ✓</div></div>
+        </div>
+
+        <div class="row col-2">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Evolução Mensal</span>
+              <span class="card-subtitle">CTR, CTOR, Conversão por mês</span>
+            </div>
+            <div class="chart-container" id="chart-engajamento-trend"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Comparativo por Canal</span>
+              <span class="card-subtitle">Abertura, CTR e CTOR por canal</span>
+            </div>
+            <div class="chart-container" id="chart-engajamento-canal"></div>
+          </div>
+        </div>
+
+        <div class="row col-1">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Performance por Canal</span>
+              <span class="card-subtitle">Métricas agregadas de engajamento e conversão por canal</span>
+            </div>
+            <div class="tbl-wrap" id="table-aba2-engajamento"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SEÇÃO 3: ISC ===== -->
+      <section class="vert-section" id="sec-isc">
+        <h3 class="section-title">Índice de Sucesso da Campanha (ISC)</h3>
+        <p class="section-desc">Score composto que avalia a performance das campanhas multicanais.</p>
+        <div class="filtros-bar">
+          <span class="filtro-label">Filtros:</span>
+          <input type="date" value="2026-03-08">
+          <span style="font-size:var(--fs-xs);color:var(--gray-40);">até</span>
+          <input type="date" value="2026-06-08">
+          <select><option>Canal: Todos</option><option>SMS</option><option>Email</option><option>WhatsApp</option></select>
+          <select><option>UF: Todas</option><option>SP</option><option>MG</option><option>RJ</option><option>BA</option><option>Outras</option></select>
+          <select><option>Perfil: Todos</option><option>MEI</option><option>EPP</option><option>ME</option><option>Informal</option><option>Produtor Rural</option></select>
+          <select><option>Produto: Todos</option><option>Cursos</option><option>Capacitações</option><option>Consultoria</option><option>Crédito</option><option>Sol. Digitais</option><option>Estruturantes</option></select>
+          <select><option>Classif. ISC: Todas</option><option>Alto (>4)</option><option>Médio (1-4)</option><option>Baixo (<1)</option></select>
+        </div>
+
+        <div class="row col-4">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">ISC Médio Geral</span>
+              <span class="card-subtitle">Score composto de sucesso da campanha</span>
+            </div>
+            <div class="isc-semaphore" id="isc-semaphore">
+              <div class="val" style="color:var(--cor-isc-yellow);">2,8</div>
+              <div><span class="dot" style="background:var(--cor-isc-yellow);"></span><span class="lbl">Médio (1-4)</span></div>
+            </div>
+            <div style="margin-top:12px;font-size:var(--fs-xs);color:var(--gray-50);">Performance dentro do esperado. Acima de 4 indica campanhas excepcionais.</div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Distribuição ISC</span>
+              <span class="card-subtitle">% por classificação</span>
+            </div>
+            <div class="chart-container-sm" id="chart-isc-distribuicao"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">ISC por Canal</span>
+              <span class="card-subtitle">Score médio por canal</span>
+            </div>
+            <div class="chart-container-sm" id="chart-isc-canal"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">ISC por Perfil</span>
+              <span class="card-subtitle">Score médio por perfil</span>
+            </div>
+            <div class="chart-container-sm" id="chart-isc-perfil"></div>
+          </div>
+        </div>
+
+        <div class="row col-2">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">ISC vs Engajamento por Canal e Perfil</span>
+              <span class="card-subtitle">Matriz de ISC (esquerda) e Tx Conversão (direita) — linha = canal, coluna = perfil</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;height:400px;">
+              <div style="display:flex;flex-direction:column;">
+                <div style="font-size:var(--fs-xs);font-weight:600;color:var(--gray-50);text-align:center;padding:2px 0;">ISC</div>
+                <div style="flex:1;" id="chart-isc-heatmap"></div>
+              </div>
+              <div style="display:flex;flex-direction:column;">
+                <div style="font-size:var(--fs-xs);font-weight:600;color:var(--gray-50);text-align:center;padding:2px 0;">Tx Conversão</div>
+                <div style="flex:1;" id="chart-conv-heatmap"></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">ISC por Segmento</span>
+              <span class="card-subtitle">Canal, perfil, volume entregue, representatividade e ISC</span>
+            </div>
+            <div class="tbl-wrap" id="table-isc-segmento" style="max-height:400px;overflow-y:auto;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================= -->
+      <!-- ATO 3: COBERTURA & EFICIÊNCIA               -->
+      <!-- ============================================= -->
+      <div class="act-divider">
+        <span class="act-title">Cobertura &amp; Eficiência</span>
+        <span class="act-subtitle">Alcançamos quem devíamos, com o custo adequado?</span>
+      </div>
+
+      <!-- ===== SEÇÃO 4: COBERTURA &amp; SEGMENTO ===== -->
+      <section class="vert-section" id="sec-cobertura">
+        <h3 class="section-title">Cobertura &amp; Segmento</h3>
+        <p class="section-desc">Percentual de alcance do público-alvo por UF, perfil e produto.</p>
+        <div class="filtros-bar">
+          <span class="filtro-label">Filtros:</span>
+          <input type="date" value="2026-03-08">
+          <span style="font-size:var(--fs-xs);color:var(--gray-40);">até</span>
+          <input type="date" value="2026-06-08">
+          <select><option>UF: Todas</option><option>SP</option><option>MG</option><option>RJ</option><option>BA</option><option>Outras</option></select>
+          <select><option>Perfil: Todos</option><option>MEI</option><option>EPP</option><option>ME</option><option>Informal</option><option>Produtor Rural</option></select>
+          <select><option>Produto: Todos</option><option>Cursos</option><option>Capacitações</option><option>Consultoria</option><option>Crédito</option><option>Sol. Digitais</option><option>Estruturantes</option></select>
+        </div>
+
+        <div class="row col-1">
+          <div class="card" style="text-align:center;padding:24px;">
+            <div class="label" style="font-size:var(--fs-sm);color:var(--gray-50);font-weight:500;margin-bottom:6px;">Cobertura Geral</div>
+            <div class="value" style="font-size:48px;font-weight:800;color:var(--blue-60);line-height:1.1;">42,3%</div>
+            <div class="sub" style="font-size:var(--fs-xs);color:var(--gray-60);">do público-alvo total alcançado</div>
+            <div style="margin:8px auto 0;max-width:240px;height:6px;background:var(--gray-20);border-radius:3px;overflow:hidden;"><div style="width:42.3%;height:100%;border-radius:3px;background:var(--blue-60);"></div></div>
+          </div>
+        </div>
+
+        <div class="row col-3">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Cobertura por UF</span>
+              <span class="card-subtitle">% alcançado por estado (Top 10)</span>
+            </div>
+            <div id="viz-cobertura-uf" style="width:100%;max-height:220px;overflow-y:auto;padding:4px 0;font-size:10px;"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Cobertura por Perfil</span>
+              <span class="card-subtitle">% alcançado por perfil</span>
+            </div>
+            <div class="chart-container-sm" id="chart-cobertura-perfil"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Cobertura por Produto</span>
+              <span class="card-subtitle">% alcançado por produto</span>
+            </div>
+            <div class="chart-container-sm" id="chart-cobertura-produto"></div>
+          </div>
+        </div>
+
+        <div class="row col-1">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Público Alcançado vs Alvo</span>
+              <span class="card-subtitle">Comparativo por UF e Perfil</span>
+            </div>
+            <div class="tbl-wrap" id="table-cobertura-uf-perfil" style="max-height:360px;overflow-y:auto;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SEÇÃO 5: EFICIÊNCIA DE CANAIS ===== -->
+      <section class="vert-section" id="sec-eficiencia">
+        <h3 class="section-title">Eficiência de Canais</h3>
+        <p class="section-desc">Taxa de entrega e conversão por canal, investimento e CPL.</p>
+        <div class="filtros-bar">
+          <span class="filtro-label">Filtros:</span>
+          <input type="date" value="2026-03-08">
+          <span style="font-size:var(--fs-xs);color:var(--gray-40);">até</span>
+          <input type="date" value="2026-06-08">
+          <select><option>Canal: Todos</option><option>SMS</option><option>Email</option><option>WhatsApp</option></select>
+          <select><option>UF: Todas</option><option>SP</option><option>MG</option><option>RJ</option><option>BA</option><option>Outras</option></select>
+          <select><option>Perfil: Todos</option><option>MEI</option><option>EPP</option><option>ME</option><option>Informal</option><option>Produtor Rural</option></select>
+        </div>
+
+        <div class="row col-4 kpi-card-grid">
+          <div class="card card-compact">
+            <div class="card-header">
+              <span class="card-title">Investimento Total</span>
+              <span class="card-subtitle">Soma do período</span>
+            </div>
+            <div class="value" style="font-weight:700;color:var(--gray-90);">R$ 847.250</div>
+            <div class="chart-container-sm spark" id="chart-spark-investimento"></div>
+          </div>
+          <div class="card card-compact">
+            <div class="card-header">
+              <span class="card-title">Taxa Entrega Média</span>
+              <span class="card-subtitle">% entregue vs enviado</span>
+            </div>
+            <div class="value" style="font-weight:700;color:var(--cor-isc-green);">97,1%</div>
+          </div>
+          <div class="card card-compact">
+            <div class="card-header">
+              <span class="card-title">Taxa Conversão Média</span>
+              <span class="card-subtitle">% conversão vs cliques</span>
+            </div>
+            <div class="value" style="font-weight:700;color:var(--gray-90);">2,1%</div>
+          </div>
+          <div class="card card-compact">
+            <div class="card-header">
+              <span class="card-title">CPL Médio</span>
+              <span class="card-subtitle">Custo por lead geral</span>
+            </div>
+            <div class="value" style="font-weight:700;color:var(--gray-90);">R$ 175,23</div>
+          </div>
+        </div>
+
+        <div class="row col-4 kpi-grid">
+          <div class="card card-compact">
+            <div class="card-header">
+              <span class="card-title">Investimento por Canal</span>
+            </div>
+            <div class="chart-container-sm chart-compact" id="chart-investimento-canal"></div>
+          </div>
+          <div class="card card-compact">
+            <div class="card-header">
+              <span class="card-title">% Entrega por Canal</span>
+            </div>
+            <div class="chart-container-sm chart-compact" id="chart-entrega-canal"></div>
+          </div>
+          <div class="card card-compact">
+            <div class="card-header">
+              <span class="card-title">Conversão por Canal</span>
+            </div>
+            <div class="chart-container-sm chart-compact" id="chart-conversao-canal"></div>
+          </div>
+          <div class="card card-compact">
+            <div class="card-header">
+              <span class="card-title">CPL por Canal</span>
+            </div>
+            <div class="chart-container-sm chart-compact" id="chart-cpl-canal"></div>
+          </div>
+        </div>
+
+        <div class="row col-1">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Investimento, Conversões e CPL por Campanha</span>
+              <span class="card-subtitle">Custo por lead (CPL) calculado</span>
+            </div>
+            <div class="tbl-wrap" id="table-eficiencia" style="max-height:360px;overflow-y:auto;"></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script src="_shared/framework.js"></script>
+<script>
+var coresCanal = { SMS: '#0045A3', Email: '#00897B', WhatsApp: '#2E7D32' };
+var coresPerfil = { 'MEI': '#0045A3', 'EPP': '#00897B', 'ME': '#E67E00', 'Informal': '#C62828', 'Produtor Rural': '#6A1B9A' };
+var perfis = ['MEI','EPP','ME','Informal','Produtor Rural'];
+var canais = ['SMS','Email','WhatsApp'];
+var produtos = ['Cursos','Capacitações','Consultoria','Crédito','Sol. Digitais','Estruturantes'];
+var meses = ['Jul/25','Ago/25','Set/25','Out/25','Nov/25','Dez/25','Jan/26','Fev/26','Mar/26','Abr/26','Mai/26','Jun/26'];
+var siglasUF = ['SP','MG','RJ','BA','RS','PR','SC','PE','CE','DF','GO','PA','MA','ES','RN','PB','AL','PI','RO','MS','MT','SE','AM','AC','AP','RR','TO'];
+
+var campanhas = [
+  {nome:'Leads Geral', canal:'SMS', perfil:'MEI', produto:'Cursos', enviados:48500, erros:1420, aberturas:9800, cliques:1200, lidas:0, optouts:85, conversoes:42, investimento:24500},
+  {nome:'Leads Geral', canal:'Email', perfil:'MEI', produto:'Cursos', enviados:50200, erros:480, aberturas:18200, cliques:2900, lidas:0, optouts:52, conversoes:98, investimento:38000},
+  {nome:'Leads Geral', canal:'WhatsApp', perfil:'MEI', produto:'Cursos', enviados:47800, erros:260, aberturas:20500, cliques:4200, lidas:31000, optouts:28, conversoes:186, investimento:42000},
+  {nome:'CRM Reativação', canal:'SMS', perfil:'ME', produto:'Capacitações', enviados:32500, erros:1150, aberturas:5200, cliques:480, lidas:0, optouts:120, conversoes:18, investimento:18200},
+  {nome:'CRM Reativação', canal:'Email', perfil:'ME', produto:'Capacitações', enviados:35800, erros:320, aberturas:10800, cliques:1650, lidas:0, optouts:68, conversoes:45, investimento:28500},
+  {nome:'CRM Reativação', canal:'WhatsApp', perfil:'ME', produto:'Capacitações', enviados:31200, erros:180, aberturas:14200, cliques:2800, lidas:21000, optouts:22, conversoes:92, investimento:32000},
+  {nome:'Prod Crédito', canal:'SMS', perfil:'EPP', produto:'Crédito', enviados:22400, erros:890, aberturas:3800, cliques:320, lidas:0, optouts:65, conversoes:12, investimento:15600},
+  {nome:'Prod Crédito', canal:'Email', perfil:'EPP', produto:'Crédito', enviados:26800, erros:210, aberturas:8200, cliques:1120, lidas:0, optouts:38, conversoes:35, investimento:22000},
+  {nome:'Prod Crédito', canal:'WhatsApp', perfil:'EPP', produto:'Crédito', enviados:24500, erros:140, aberturas:11200, cliques:2100, lidas:16200, optouts:15, conversoes:72, investimento:28000},
+  {nome:'Capacitação', canal:'SMS', perfil:'Informal', produto:'Capacitações', enviados:18400, erros:780, aberturas:2800, cliques:240, lidas:0, optouts:95, conversoes:8, investimento:9800},
+  {nome:'Capacitação', canal:'Email', perfil:'Informal', produto:'Capacitações', enviados:21200, erros:190, aberturas:6400, cliques:780, lidas:0, optouts:42, conversoes:22, investimento:16800},
+  {nome:'Capacitação', canal:'WhatsApp', perfil:'Informal', produto:'Capacitações', enviados:19800, erros:120, aberturas:8600, cliques:1550, lidas:12800, optouts:18, conversoes:48, investimento:21000},
+  {nome:'Consultoria', canal:'SMS', perfil:'Produtor Rural', produto:'Consultoria', enviados:12800, erros:620, aberturas:1800, cliques:150, lidas:0, optouts:48, conversoes:5, investimento:12500},
+  {nome:'Consultoria', canal:'Email', perfil:'Produtor Rural', produto:'Consultoria', enviados:15600, erros:140, aberturas:4800, cliques:520, lidas:0, optouts:28, conversoes:15, investimento:19500},
+  {nome:'Consultoria', canal:'WhatsApp', perfil:'Produtor Rural', produto:'Consultoria', enviados:14200, erros:90, aberturas:6200, cliques:1050, lidas:9200, optouts:12, conversoes:32, investimento:24000},
+  {nome:'Sol. Digitais', canal:'SMS', perfil:'MEI', produto:'Sol. Digitais', enviados:15200, erros:580, aberturas:2100, cliques:180, lidas:0, optouts:55, conversoes:6, investimento:11000},
+  {nome:'Sol. Digitais', canal:'Email', perfil:'MEI', produto:'Sol. Digitais', enviados:17800, erros:160, aberturas:5400, cliques:620, lidas:0, optouts:32, conversoes:18, investimento:16800},
+  {nome:'Sol. Digitais', canal:'WhatsApp', perfil:'MEI', produto:'Sol. Digitais', enviados:16200, erros:100, aberturas:7200, cliques:1250, lidas:10500, optouts:10, conversoes:38, investimento:21000},
+  {nome:'Estruturantes', canal:'Email', perfil:'ME', produto:'Estruturantes', enviados:9800, erros:105, aberturas:3200, cliques:380, lidas:0, optouts:22, conversoes:10, investimento:14200},
+  {nome:'Estruturantes', canal:'WhatsApp', perfil:'EPP', produto:'Estruturantes', enviados:9200, erros:55, aberturas:4200, cliques:780, lidas:6200, optouts:8, conversoes:24, investimento:18500}
+];
+
+campanhas.forEach(function(c) {
+  c.entregues = c.enviados - c.erros;
+  c.pctErro = c.enviados > 0 ? (c.erros / c.enviados * 100) : 0;
+  c.pctEntrega = c.enviados > 0 ? (c.entregues / c.enviados * 100) : 0;
+  c.pctAbertura = c.entregues > 0 ? (c.aberturas / c.entregues * 100) : 0;
+  c.pctClique = c.entregues > 0 ? (c.cliques / c.entregues * 100) : 0;
+  c.pctLidas = c.entregues > 0 && c.lidas > 0 ? (c.lidas / c.entregues * 100) : 0;
+  c.pctOptout = c.entregues > 0 ? (c.optouts / c.entregues * 100) : 0;
+  c.pctConversao = c.cliques > 0 ? (c.conversoes / c.cliques * 100) : 0;
+  var taxaEntregaPts = c.pctEntrega >= 97 ? 5 : c.pctEntrega >= 90 ? 3 : 1;
+  var taxaAberturaPts = c.pctAbertura >= 40 ? 5 : c.pctAbertura >= 20 ? 3 : 1;
+  var taxaCTRPts = c.pctClique >= 5 ? 5 : c.pctClique >= 2 ? 3 : 1;
+  var taxaConvPts = c.pctConversao >= 3 ? 5 : c.pctConversao >= 1 ? 3 : 0.5;
+  c.isc = parseFloat(((taxaEntregaPts + taxaAberturaPts + taxaCTRPts + taxaConvPts) / 4).toFixed(1));
+  c.cpl = c.conversoes > 0 ? (c.investimento / c.conversoes) : 0;
+});
+
+function renderTable(id, cols, data, fmts) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var h = '<table><thead><tr>';
+  for (var i = 0; i < cols.length; i++) { h += '<th data-col="'+i+'" onclick="sortTable(\''+id+'\','+i+')">'+cols[i]+'</th>'; }
+  h += '</tr></thead><tbody>';
+  for (var r = 0; r < data.length; r++) {
+    h += '<tr>';
+    for (var c = 0; c < data[r].length; c++) {
+      var val = data[r][c];
+      if (fmts && fmts[c] === 'pct') val = parseFloat(val).toFixed(1) + '%';
+      else if (fmts && fmts[c] === 'num') val = parseFloat(val).toLocaleString();
+      else if (fmts && fmts[c] === 'moeda') val = 'R$ ' + parseFloat(val).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+      else if (fmts && fmts[c] === 'isc') {
+        var n = parseFloat(val);
+        var cls = n > 4 ? 'badge-green' : n >= 1 ? 'badge-amber' : 'badge-red';
+        val = '<span class="badge ' + cls + '">' + n.toFixed(1) + '</span>';
+      }
+      if (fmts && fmts[c] === 'alerta') {
+        var n = parseFloat(val);
+        val = n > 5 ? '<span style="color:#C62828;font-weight:600;">' + n.toFixed(1) + '%</span>' : n.toFixed(1) + '%';
+      }
+      h += '<td>' + val + '</td>';
+    }
+    h += '</tr>';
+  }
+  h += '</tbody></table>';
+  el.innerHTML = h;
+}
+
+var sortState = {};
+function sortTable(id, col) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var table = el.querySelector('table');
+  if (!table) return;
+  var tbody = table.querySelector('tbody');
+  var rows = Array.from(tbody.querySelectorAll('tr'));
+  var asc = sortState[id + '-' + col] !== true;
+  sortState[id + '-' + col] = asc;
+  rows.sort(function(a, b) {
+    var va = a.children[col].textContent.trim().replace(/[R$\s.,]/g,'').replace(',','.');
+    var vb = b.children[col].textContent.trim().replace(/[R$\s.,]/g,'').replace(',','.');
+    var na = parseFloat(va), nb = parseFloat(vb);
+    if (!isNaN(na) && !isNaN(nb)) return asc ? na - nb : nb - na;
+    return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  rows.forEach(function(r) { tbody.appendChild(r); });
+}
+
+function fmtNum(n) { return n.toLocaleString(); }
+function fmtPct(n) { return n.toFixed(1) + '%'; }
+function fmtMoeda(n) { return 'R$ ' + n.toFixed(2).replace('.',','); }
+
+// ===== TAB 1: Funil de Entrega =====
+
+initChart('chart-spark-enviados', {
+  grid: { top:2, right:2, bottom:2, left:2 }, xAxis: { show:false, type:'category', data:[1,2,3,4,5,6,7] }, yAxis: { show:false, min:0 },
+  series: [{ type:'line', data:[42000,44500,46800,45200,48500,47800,50200], smooth:true, lineStyle:{ width:2, color:'#0060DF' }, symbol:'none', areaStyle:{ color:'rgba(0,96,223,0.1)' } }]
+});
+initChart('chart-spark-erros', {
+  grid: { top:2, right:2, bottom:2, left:2 }, xAxis: { show:false, type:'category', data:[1,2,3,4,5,6,7] }, yAxis: { show:false, min:0 },
+  series: [{ type:'line', data:[1800,1650,1520,1480,1420,1380,1350], smooth:true, lineStyle:{ width:2, color:'#C62828' }, symbol:'none', areaStyle:{ color:'rgba(198,40,40,0.1)' } }]
+});
+initChart('chart-spark-entregues', {
+  grid: { top:2, right:2, bottom:2, left:2 }, xAxis: { show:false, type:'category', data:[1,2,3,4,5,6,7] }, yAxis: { show:false, min:0 },
+  series: [{ type:'line', data:[40200,42850,45280,43720,47100,46420,48850], smooth:true, lineStyle:{ width:2, color:'#00897B' }, symbol:'none', areaStyle:{ color:'rgba(0,137,123,0.1)' } }]
+});
+
+var envCanal = {}, errCanal = {}, entCanal = {};
+canais.forEach(function(cnl) { envCanal[cnl]=0; errCanal[cnl]=0; entCanal[cnl]=0; });
+campanhas.forEach(function(c) { envCanal[c.canal]+=c.enviados; errCanal[c.canal]+=c.erros; entCanal[c.canal]+=c.entregues; });
+
+function makeHorizBar(id, dados, corMap, rotulo) {
+  initChart(id, {
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return '<b>' + p[0].name + '</b><br/>' + rotulo + ': ' + fmtNum(p[0].value); } },
+    grid: { top: 5, right: 55, bottom: 5, left: 70 },
+    xAxis: { type: 'value', axisLabel: { fontSize: 9 } },
+    yAxis: { type: 'category', data: canais, inverse: true, axisLabel: { fontSize: 10, fontWeight: 'bold' }, axisLine: { show: false }, axisTick: { show: false } },
+    series: [{
+      type: 'bar', data: canais.map(function(cnl) { return { value: dados[cnl], itemStyle: { color: corMap[cnl], borderRadius: [0,4,4,0] } }; }),
+      barWidth: '60%', label: { show: true, position: 'right', fontSize: 10, formatter: function(p) { return fmtNum(p.value); } }
+    }]
+  });
+}
+makeHorizBar('chart-bar-envios-canal', envCanal, coresCanal, 'Enviados');
+makeHorizBar('chart-bar-erros-canal', errCanal, coresCanal, 'Erros');
+makeHorizBar('chart-bar-entregues-canal', entCanal, coresCanal, 'Entregues');
+
+// % Entregabilidade por canal
+(function() {
+  var entPctCanal = {};
+  canais.forEach(function(cnl) {
+    entPctCanal[cnl] = envCanal[cnl] > 0 ? parseFloat((entCanal[cnl] / envCanal[cnl] * 100).toFixed(1)) : 0;
+  });
+  initChart('chart-bar-entrega-pct-canal', {
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return '<b>' + p[0].name + '</b><br/>% Entregabilidade: ' + p[0].value.toFixed(1) + '%'; } },
+    grid: { top: 5, right: 55, bottom: 5, left: 70 },
+    xAxis: { type: 'value', axisLabel: { fontSize: 9, formatter: '{value}%' } },
+    yAxis: { type: 'category', data: canais, inverse: true, axisLabel: { fontSize: 10, fontWeight: 'bold' }, axisLine: { show: false }, axisTick: { show: false } },
+    series: [{
+      type: 'bar', data: canais.map(function(cnl) {
+        return { value: entPctCanal[cnl], itemStyle: { color: coresCanal[cnl], borderRadius: [0,4,4,0] } };
+      }),
+      barWidth: '60%', label: { show: true, position: 'right', fontSize: 10, formatter: function(p) { return p.value.toFixed(1) + '%'; } }
+    }]
+  });
+})();
+
+(function() {
+  var cols = ['Campanha','Canal','Enviados','Erros','%Erro','Entregues','%Entrega'];
+  var data = campanhas.map(function(c) {
+    return [c.nome, c.canal, c.enviados.toString(), c.erros.toString(), c.pctErro.toFixed(1).toString(), c.entregues.toString(), c.pctEntrega.toFixed(1).toString()];
+  });
+  data.sort(function(a,b) { return parseInt(b[2]) - parseInt(a[2]); });
+  renderTable('table-aba1-entrega', cols, data, { 2:'num', 3:'num', 4:'alerta', 5:'num', 6:'pct' });
+})();
+
+// Tabela de Tipos de Erro — volume + representatividade por canal com RGY
+(function() {
+  var tipoErros = ['Timeout','Rejeitado','Inválido','Bloqueado','Blacklist','Indevido'];
+  var errChannelTotal = {};
+  var errByChannelType = {};
+  canais.forEach(function(cnl) {
+    errChannelTotal[cnl] = 0;
+    errByChannelType[cnl] = {};
+    tipoErros.forEach(function(t) { errByChannelType[cnl][t] = 0; });
+  });
+  campanhas.forEach(function(c) {
+    if (c.erros === 0) return;
+    var restante = c.erros;
+    tipoErros.forEach(function(tipo, i) {
+      if (restante <= 0) return;
+      var qtd = i < tipoErros.length - 1 ? Math.max(1, Math.round(c.erros * (0.1 + Math.random() * 0.25))) : restante;
+      qtd = Math.min(qtd, restante);
+      errByChannelType[c.canal][tipo] += qtd;
+      errChannelTotal[c.canal] += qtd;
+      restante -= qtd;
+    });
+  });
+  var errData = [];
+  canais.forEach(function(cnl) {
+    var totalCnl = errChannelTotal[cnl];
+    tipoErros.forEach(function(tipo) {
+      var vol = errByChannelType[cnl][tipo];
+      if (vol === 0) return;
+      var pct = totalCnl > 0 ? (vol / totalCnl * 100) : 0;
+      var cls = pct < 20 ? 'badge-green' : pct < 50 ? 'badge-amber' : 'badge-red';
+      errData.push({ canal: cnl, tipo: tipo, vol: vol, pct: pct, cls: cls });
+    });
+  });
+  errData.sort(function(a,b) { return b.vol - a.vol; });
+  var rows = errData.map(function(d) {
+    return [d.canal, d.tipo, fmtNum(d.vol), '<span class="badge ' + d.cls + '">' + d.pct.toFixed(1) + '%</span>'];
+  });
+  renderTable('table-tipos-erro', ['Canal','Tipo Erro','Volume','% do Canal'], rows);
+})();
+
+// ===== TAB 2: Engajamento & Conversão =====
+
+var trendData = [
+  { mes: 'Jul/25', ctr: 3.2, ctor: 7.8, conv: 1.8 },
+  { mes: 'Ago/25', ctr: 3.5, ctor: 8.1, conv: 1.9 },
+  { mes: 'Set/25', ctr: 3.3, ctor: 7.6, conv: 1.7 },
+  { mes: 'Out/25', ctr: 3.6, ctor: 7.9, conv: 2.0 },
+  { mes: 'Nov/25', ctr: 3.8, ctor: 8.2, conv: 2.1 },
+  { mes: 'Dez/25', ctr: 3.4, ctor: 7.5, conv: 1.8 },
+  { mes: 'Jan/26', ctr: 3.7, ctor: 7.8, conv: 2.0 },
+  { mes: 'Fev/26', ctr: 3.9, ctor: 8.0, conv: 2.2 },
+  { mes: 'Mar/26', ctr: 3.6, ctor: 7.4, conv: 1.9 },
+  { mes: 'Abr/26', ctr: 4.0, ctor: 7.9, conv: 2.1 },
+  { mes: 'Mai/26', ctr: 3.8, ctor: 7.6, conv: 2.0 },
+  { mes: 'Jun/26', ctr: 3.8, ctor: 7.6, conv: 2.1 }
+];
+
+initChart('chart-engajamento-trend', {
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['CTR','CTOR','Conversão'], bottom: 0, icon: 'circle', itemWidth: 8, itemHeight: 8, textStyle: { fontSize: 10 } },
+  grid: { top: 10, right: 10, bottom: 36, left: 50 },
+  xAxis: { type: 'category', data: trendData.map(function(d){return d.mes;}), axisLabel: { fontSize: 9 } },
+  yAxis: { type: 'value', axisLabel: { fontSize: 10, formatter: '{value}%' } },
+  series: [
+    { name: 'CTR', type: 'line', data: trendData.map(function(d){return d.ctr;}), smooth: true, lineStyle: { width: 2, color: '#0060DF' }, symbol: 'circle', symbolSize: 5, color: '#0060DF' },
+    { name: 'CTOR', type: 'line', data: trendData.map(function(d){return d.ctor;}), smooth: true, lineStyle: { width: 2, color: '#00897B' }, symbol: 'diamond', symbolSize: 6, color: '#00897B' },
+    { name: 'Conversão', type: 'line', data: trendData.map(function(d){return d.conv;}), smooth: true, lineStyle: { width: 2, color: '#E67E00' }, symbol: 'triangle', symbolSize: 6, color: '#E67E00' }
+  ]
+});
+
+var engCanalData = [
+  { canal: 'SMS', abertura: 18.5, ctr: 1.2, ctor: 6.5 },
+  { canal: 'Email', abertura: 32.1, ctr: 3.2, ctor: 10.0 },
+  { canal: 'WhatsApp', abertura: 62.0, ctr: 8.5, ctor: 13.7 }
+];
+
+initChart('chart-engajamento-canal', {
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['Abertura','CTR','CTOR'], bottom: 0, icon: 'circle', itemWidth: 8, itemHeight: 8, textStyle: { fontSize: 10 } },
+  grid: { top: 10, right: 10, bottom: 36, left: 50 },
+  xAxis: { type: 'category', data: ['SMS','Email','WhatsApp'], axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', axisLabel: { fontSize: 10, formatter: '{value}%' } },
+  series: [
+    { name: 'Abertura', type: 'bar', data: engCanalData.map(function(d){return d.abertura;}), color: '#0060DF', barWidth: '22%' },
+    { name: 'CTR', type: 'bar', data: engCanalData.map(function(d){return d.ctr;}), color: '#00897B', barWidth: '22%' },
+    { name: 'CTOR', type: 'bar', data: engCanalData.map(function(d){return d.ctor;}), color: '#E67E00', barWidth: '22%' }
+  ]
+});
+
+(function() {
+  var perfCanal = {};
+  canais.forEach(function(cnl) {
+    perfCanal[cnl] = { enviados: 0, aberturas: 0, cliques: 0, optouts: 0, conversoes: 0 };
+  });
+  campanhas.forEach(function(c) {
+    var p = perfCanal[c.canal];
+    p.enviados += c.enviados;
+    p.aberturas += c.aberturas;
+    p.cliques += c.cliques;
+    p.optouts += c.optouts;
+    p.conversoes += c.conversoes;
+  });
+  var cols = ['Canal','Enviados','Aberturas','Tx.Abertura','Cliques','Tx.Clique','Conversões','Tx.Conversão'];
+  var data = canais.map(function(cnl) {
+    var p = perfCanal[cnl];
+    var txAbert = p.enviados > 0 ? p.aberturas / p.enviados * 100 : 0;
+    var txClique = p.aberturas > 0 ? p.cliques / p.aberturas * 100 : 0;
+    var txConv = p.cliques > 0 ? p.conversoes / p.cliques * 100 : 0;
+    return [cnl, fmtNum(p.enviados), fmtNum(p.aberturas), txAbert.toFixed(1)+'%', fmtNum(p.cliques), txClique.toFixed(1)+'%', fmtNum(p.conversoes), txConv.toFixed(1)+'%'];
+  });
+  renderTable('table-aba2-engajamento', cols, data);
+})();
+
+// ===== TAB 3: ISC =====
+
+initChart('chart-isc-distribuicao', {
+  tooltip: { trigger: 'item', formatter: '{b}: {c}% ({d}%)' },
+  series: [{
+    type: 'pie', radius: ['45%','70%'], center: ['50%','50%'],
+    label: { show: true, formatter: '{b}\n{d}%', fontSize: 9 },
+    data: [
+      { value: 25, name: 'Alto (>4)', itemStyle: { color: '#00897B' } },
+      { value: 55, name: 'Médio (1-4)', itemStyle: { color: '#E67E00' } },
+      { value: 20, name: 'Baixo (<1)', itemStyle: { color: '#C62828' } }
+    ]
+  }]
+});
+
+var iscCanal = { SMS: 0, Email: 0, WhatsApp: 0 };
+var iscCanalCount = { SMS: 0, Email: 0, WhatsApp: 0 };
+campanhas.forEach(function(c) {
+  iscCanal[c.canal] += c.isc;
+  iscCanalCount[c.canal]++;
+});
+canais.forEach(function(cnl) { iscCanal[cnl] = iscCanalCount[cnl] > 0 ? parseFloat((iscCanal[cnl] / iscCanalCount[cnl]).toFixed(1)) : 0; });
+
+initChart('chart-isc-canal', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return '<b>' + p[0].name + '</b><br/>ISC: ' + p[0].value.toFixed(1); } },
+  grid: { top: 5, right: 10, bottom: 5, left: 70 },
+  xAxis: { type: 'value', min: 0, max: 5, axisLabel: { fontSize: 9 } },
+  yAxis: { type: 'category', data: canais, inverse: true, axisLabel: { fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+  series: [{
+    type: 'bar',
+    data: canais.map(function(cnl) {
+      var cor = iscCanal[cnl] > 4 ? '#00897B' : iscCanal[cnl] >= 1 ? '#E67E00' : '#C62828';
+      return { value: iscCanal[cnl], itemStyle: { color: cor, borderRadius: [0,4,4,0] } };
+    }),
+    barWidth: '55%',
+    label: { show: true, position: 'right', fontSize: 10, formatter: function(p) { return p.value.toFixed(1); } }
+  }]
+});
+
+var iscPerfil = {};
+perfis.forEach(function(p) { iscPerfil[p] = { sum: 0, count: 0 }; });
+campanhas.forEach(function(c) {
+  iscPerfil[c.perfil].sum += c.isc;
+  iscPerfil[c.perfil].count++;
+});
+perfis.forEach(function(p) { iscPerfil[p] = iscPerfil[p].count > 0 ? parseFloat((iscPerfil[p].sum / iscPerfil[p].count).toFixed(1)) : 0; });
+
+initChart('chart-isc-perfil', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return '<b>' + p[0].name + '</b><br/>ISC: ' + p[0].value.toFixed(1); } },
+  grid: { top: 5, right: 10, bottom: 5, left: 90 },
+  xAxis: { type: 'value', min: 0, max: 5, axisLabel: { fontSize: 9 } },
+  yAxis: { type: 'category', data: perfis, inverse: true, axisLabel: { fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+  series: [{
+    type: 'bar',
+    data: perfis.map(function(p) {
+      var v = iscPerfil[p];
+      var cor = v > 4 ? '#00897B' : v >= 1 ? '#E67E00' : '#C62828';
+      return { value: v, itemStyle: { color: cor, borderRadius: [0,4,4,0] } };
+    }),
+    barWidth: '55%',
+    label: { show: true, position: 'right', fontSize: 10, formatter: function(p) { return p.value.toFixed(1); } }
+  }]
+});
+
+// Heatmap duplo: ISC e Tx Conversão por Canal × Perfil
+(function() {
+  var groupMap = {};
+  var entTotalCanal = { SMS:0, Email:0, WhatsApp:0 };
+  campanhas.forEach(function(c) {
+    var key = c.canal + '|' + c.perfil;
+    if (!groupMap[key]) { groupMap[key] = { canal: c.canal, perfil: c.perfil, iscSum: 0, convSum: 0, count: 0, entregues: 0 }; }
+    groupMap[key].iscSum += c.isc;
+    groupMap[key].convSum += c.pctConversao;
+    groupMap[key].count++;
+    groupMap[key].entregues += c.entregues;
+    entTotalCanal[c.canal] += c.entregues;
+  });
+
+  var iscHeat = [];
+  var convHeat = [];
+  var maxConv = 0;
+  Object.keys(groupMap).forEach(function(key) {
+    var g = groupMap[key];
+    var iscMed = parseFloat((g.iscSum / g.count).toFixed(1));
+    var convMed = parseFloat((g.convSum / g.count).toFixed(1));
+    var ci = canais.indexOf(g.canal);
+    var pi = perfis.indexOf(g.perfil);
+    iscHeat.push([pi, ci, iscMed]);
+    convHeat.push([pi, ci, convMed]);
+    if (convMed > maxConv) maxConv = convMed;
+  });
+
+  initChart('chart-isc-heatmap', {
+    tooltip: { position: 'top', formatter: function(p) { return '<b>' + perfis[p.data[0]] + ' (' + canais[p.data[1]] + ')</b><br/>ISC: ' + p.data[2].toFixed(1); } },
+    grid: { top: 20, right: 5, bottom: 16, left: 90 },
+    xAxis: { type: 'category', data: perfis, axisLabel: { fontSize: 9, rotate: 0 } },
+    yAxis: { type: 'category', data: canais, axisLabel: { fontSize: 10, fontWeight: 'bold' } },
+    visualMap: { min: 0, max: 5, calculable: false, orient: 'horizontal', left: 'center', bottom: -5, inRange: { color: ['#C62828','#E67E00','#00897B'] }, itemWidth: 10, itemHeight: 60 },
+    series: [{ type: 'heatmap', data: iscHeat, label: { show: true, fontSize: 11, fontWeight: 'bold', formatter: function(p) { return p.data[2].toFixed(1); } }, emphasis: { itemStyle: { shadowBlur: 4 } } }]
+  });
+
+  initChart('chart-conv-heatmap', {
+    tooltip: { position: 'top', formatter: function(p) { return '<b>' + perfis[p.data[0]] + ' (' + canais[p.data[1]] + ')</b><br/>Tx Conversão: ' + p.data[2].toFixed(1) + '%'; } },
+    grid: { top: 20, right: 5, bottom: 16, left: 90 },
+    xAxis: { type: 'category', data: perfis, axisLabel: { fontSize: 9, rotate: 0 } },
+    yAxis: { type: 'category', data: canais, axisLabel: { fontSize: 10, fontWeight: 'bold' } },
+    visualMap: { min: 0, max: Math.ceil(maxConv * 1.2), calculable: false, orient: 'horizontal', left: 'center', bottom: -5, inRange: { color: ['#E3F2FD','#1565C0'] }, itemWidth: 10, itemHeight: 60 },
+    series: [{ type: 'heatmap', data: convHeat, label: { show: true, fontSize: 11, formatter: function(p) { return p.data[2].toFixed(1) + '%'; } }, emphasis: { itemStyle: { shadowBlur: 4 } } }]
+  });
+
+  // Tabela ISC por Segmento
+  var segData = [];
+  Object.keys(groupMap).forEach(function(key) {
+    var g = groupMap[key];
+    var iscMed = parseFloat((g.iscSum / g.count).toFixed(1));
+    var rep = entTotalCanal[g.canal] > 0 ? (g.entregues / entTotalCanal[g.canal] * 100) : 0;
+    segData.push({ canal: g.canal, perfil: g.perfil, entregues: g.entregues, rep: rep, isc: iscMed });
+  });
+  segData.sort(function(a,b) {
+    if (a.canal < b.canal) return -1;
+    if (a.canal > b.canal) return 1;
+    return b.isc - a.isc;
+  });
+  var cols = ['Canal','Perfil','Volume Entregue','Representatividade','ISC'];
+  var rows = segData.map(function(d) {
+    var iscCls = d.isc > 4 ? 'badge-green' : d.isc >= 1 ? 'badge-amber' : 'badge-red';
+    return [d.canal, d.perfil, fmtNum(d.entregues), d.rep.toFixed(1) + '%', '<span class="badge ' + iscCls + '">' + d.isc.toFixed(1) + '</span>'];
+  });
+  renderTable('table-isc-segmento', cols, rows);
+})();
+
+// ===== TAB 4: Cobertura & Segmento =====
+
+var coberturaUF = [
+  { uf: 'SP', val: 55.2 }, { uf: 'MG', val: 48.6 }, { uf: 'RJ', val: 44.1 },
+  { uf: 'BA', val: 38.5 }, { uf: 'RS', val: 36.8 }, { uf: 'PR', val: 34.2 },
+  { uf: 'SC', val: 32.5 }, { uf: 'PE', val: 30.1 }, { uf: 'CE', val: 28.4 },
+  { uf: 'DF', val: 26.9 }, { uf: 'GO', val: 25.2 }, { uf: 'PA', val: 23.8 },
+  { uf: 'MA', val: 22.1 }, { uf: 'ES', val: 21.5 }, { uf: 'RN', val: 20.3 },
+  { uf: 'PB', val: 19.6 }, { uf: 'AL', val: 18.8 }, { uf: 'PI', val: 17.5 },
+  { uf: 'RO', val: 16.2 }, { uf: 'MS', val: 15.8 }, { uf: 'MT', val: 15.4 },
+  { uf: 'SE', val: 14.9 }, { uf: 'AM', val: 13.5 }, { uf: 'AC', val: 11.2 },
+  { uf: 'AP', val: 10.8 }, { uf: 'RR', val: 9.5 }, { uf: 'TO', val: 9.2 }
+].sort(function(a,b) { return b.val - a.val; });
+
+(function() {
+  var maxVal = coberturaUF[0].val;
+  var html = '<div style="display:flex;flex-direction:column;gap:2px;">';
+  coberturaUF.forEach(function(d) {
+    var cor = d.val >= 40 ? '#0060DF' : d.val >= 20 ? '#45A1FF' : '#80BCFF';
+    var w = (d.val / maxVal * 100);
+    html += '<div style="display:flex;align-items:center;gap:5px;height:16px;">';
+    html += '<span style="width:22px;font-weight:600;text-align:right;font-size:9px;color:var(--gray-70);flex-shrink:0;">' + d.uf + '</span>';
+    html += '<div style="flex:1;height:12px;background:var(--gray-10);border-radius:3px;overflow:hidden;min-width:0;"><div style="width:' + w + '%;height:100%;background:' + cor + ';border-radius:3px;"></div></div>';
+    html += '<span style="width:34px;text-align:right;font-size:9px;color:var(--gray-70);flex-shrink:0;">' + d.val.toFixed(1).replace('.',',') + '%</span>';
+    html += '</div>';
+  });
+  html += '</div>';
+  document.getElementById('viz-cobertura-uf').innerHTML = html;
+})();
+
+var coberturaPerfil = [
+  { perfil: 'MEI', val: 52.4 }, { perfil: 'EPP', val: 45.8 }, { perfil: 'ME', val: 38.2 },
+  { perfil: 'Informal', val: 28.5 }, { perfil: 'Produtor Rural', val: 22.1 }
+];
+
+initChart('chart-cobertura-perfil', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 5, right: 10, bottom: 24, left: 90 },
+  xAxis: { type: 'value', axisLabel: { fontSize: 10, formatter: '{value}%' } },
+  yAxis: { type: 'category', data: coberturaPerfil.map(function(d){return d.perfil;}), inverse: true, axisLabel: { fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+  series: [{
+    type: 'bar',
+    data: coberturaPerfil.map(function(d) {
+      var cor = d.val >= 40 ? '#00897B' : d.val >= 25 ? '#F9A825' : '#C62828';
+      return { value: d.val, itemStyle: { color: cor, borderRadius: [0,4,4,0] } };
+    }),
+    barWidth: '55%',
+    label: { show: true, position: 'right', fontSize: 10, formatter: function(p) { return p.value.toFixed(1) + '%'; } }
+  }]
+});
+
+var coberturaProduto = [
+  { prod: 'Cursos', val: 48.5 }, { prod: 'Capacitações', val: 52.3 },
+  { prod: 'Consultoria', val: 35.2 }, { prod: 'Crédito', val: 28.6 },
+  { prod: 'Sol. Digitais', val: 22.4 }, { prod: 'Estruturantes', val: 18.1 }
+].sort(function(a,b) { return b.val - a.val; });
+
+initChart('chart-cobertura-produto', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 5, right: 10, bottom: 24, left: 100 },
+  xAxis: { type: 'value', axisLabel: { fontSize: 10, formatter: '{value}%' } },
+  yAxis: { type: 'category', data: coberturaProduto.map(function(d){return d.prod;}), inverse: true, axisLabel: { fontSize: 10 }, axisLine: { show: false }, axisTick: { show: false } },
+  series: [{
+    type: 'bar',
+    data: coberturaProduto.map(function(d) {
+      var cor = d.val >= 45 ? '#0060DF' : d.val >= 25 ? '#45A1FF' : '#80BCFF';
+      return { value: d.val, itemStyle: { color: cor, borderRadius: [0,4,4,0] } };
+    }),
+    barWidth: '55%',
+    label: { show: true, position: 'right', fontSize: 10, formatter: function(p) { return p.value.toFixed(1) + '%'; } }
+  }]
+});
+
+(function() {
+  var cols = ['UF','Perfil','Alcançados','Alvo','%'];
+  var data = [];
+  var coberturaTargets = { SP: 2850000, MG: 1680000, RJ: 1520000, BA: 980000, RS: 920000, PR: 880000, SC: 760000, PE: 710000, CE: 680000, DF: 520000, GO: 490000, PA: 450000, MA: 420000, ES: 390000, RN: 360000, PB: 340000, AL: 310000, PI: 290000, RO: 260000, MS: 240000, MT: 220000, SE: 200000, AM: 180000, AC: 140000, AP: 120000, RR: 100000, TO: 95000 };
+  coberturaUF.forEach(function(u) {
+    perfis.forEach(function(p, pi) {
+      var alcan = Math.round(coberturaTargets[u.uf] * (u.val / 100) * (1 - pi * 0.08) / perfis.length);
+      var alvo = Math.round(coberturaTargets[u.uf] / perfis.length);
+      var pct = alvo > 0 ? (alcan / alvo * 100) : 0;
+      data.push([u.uf, p, fmtNum(alcan), fmtNum(alvo), pct.toFixed(1).toString()]);
+    });
+  });
+  renderTable('table-cobertura-uf-perfil', cols, data);
+})();
+
+// ===== TAB 5: Eficiência de Canais =====
+
+initChart('chart-spark-investimento', {
+  grid: { top:2, right:2, bottom:2, left:2 }, xAxis: { show:false, type:'category', data:[1,2,3,4,5,6] }, yAxis: { show:false, min:0 },
+  series: [{ type:'line', data:[125000,138000,142000,148000,152000,142250], smooth:true, lineStyle:{ width:2, color:'#0060DF' }, symbol:'none', areaStyle:{ color:'rgba(0,96,223,0.1)' } }]
+});
+
+// ===== 4 mini barras horizontais: Investimento, %Entrega, Conversão, CPL por Canal =====
+(function() {
+  var canalData = {};
+  canais.forEach(function(cnl) {
+    var totalEnv = 0, totalErr = 0, totalConv = 0, totalCliques = 0, totalInv = 0;
+    campanhas.forEach(function(c) {
+      if (c.canal === cnl) { totalEnv += c.enviados; totalErr += c.erros; totalConv += c.conversoes; totalCliques += c.cliques; totalInv += c.investimento; }
+    });
+    canalData[cnl] = {
+      investimento: totalInv,
+      txEntrega: totalEnv > 0 ? parseFloat(((totalEnv - totalErr) / totalEnv * 100).toFixed(1)) : 0,
+      conversoes: totalConv,
+      cpl: totalConv > 0 ? parseFloat((totalInv / totalConv).toFixed(2)) : 0
+    };
+  });
+
+  var rev = canais.slice().reverse();
+
+  initChart('chart-investimento-canal', {
+    tooltip: { trigger: 'axis', axisPointer:{type:'shadow'}, formatter:function(p){return '<b>'+p[0].name+'</b><br/>R$ '+fmtNum(p[0].value);}},
+    grid: { top:5, right:50, bottom:5, left:5 },
+    xAxis: { type:'value', axisLabel:{fontSize:8, formatter:function(v){return 'R$'+fmtNum(v);}} },
+    yAxis: { type:'category', data:rev, axisLabel:{fontSize:9, fontWeight:'bold'}, axisLine:{show:false}, axisTick:{show:false} },
+    series: [{ type:'bar', data:rev.map(function(cnl){return{value:canalData[cnl].investimento,itemStyle:{color:coresCanal[cnl],borderRadius:[0,3,3,0]}};}), barWidth:'55%', label:{show:true, position:'right', fontSize:8, formatter:function(p){return fmtNum(p.value);}} }]
+  });
+
+  initChart('chart-entrega-canal', {
+    tooltip: { trigger: 'axis', axisPointer:{type:'shadow'}, formatter:function(p){return '<b>'+p[0].name+'</b><br/>'+p[0].value.toFixed(1)+'%';}},
+    grid: { top:5, right:40, bottom:5, left:5 },
+    xAxis: { type:'value', axisLabel:{fontSize:8, formatter:'{value}%'}, min:85 },
+    yAxis: { type:'category', data:rev, axisLabel:{fontSize:9, fontWeight:'bold'}, axisLine:{show:false}, axisTick:{show:false} },
+    series: [{ type:'bar', data:rev.map(function(cnl){return{value:canalData[cnl].txEntrega,itemStyle:{color:coresCanal[cnl],borderRadius:[0,3,3,0]}};}), barWidth:'55%', label:{show:true, position:'right', fontSize:8, formatter:function(p){return p.value.toFixed(1)+'%';}} }]
+  });
+
+  initChart('chart-conversao-canal', {
+    tooltip: { trigger: 'axis', axisPointer:{type:'shadow'}, formatter:function(p){return '<b>'+p[0].name+'</b><br/>'+fmtNum(p[0].value);}},
+    grid: { top:5, right:40, bottom:5, left:5 },
+    xAxis: { type:'value', axisLabel:{fontSize:8, formatter:function(v){return v>=1000?fmtNum(v):v;}} },
+    yAxis: { type:'category', data:rev, axisLabel:{fontSize:9, fontWeight:'bold'}, axisLine:{show:false}, axisTick:{show:false} },
+    series: [{ type:'bar', data:rev.map(function(cnl){return{value:canalData[cnl].conversoes,itemStyle:{color:coresCanal[cnl],borderRadius:[0,3,3,0]}};}), barWidth:'55%', label:{show:true, position:'right', fontSize:8, formatter:function(p){return fmtNum(p.value);}} }]
+  });
+
+  initChart('chart-cpl-canal', {
+    tooltip: { trigger: 'axis', axisPointer:{type:'shadow'}, formatter:function(p){return '<b>'+p[0].name+'</b><br/>R$ '+p[0].value.toFixed(2);}},
+    grid: { top:5, right:50, bottom:5, left:5 },
+    xAxis: { type:'value', axisLabel:{fontSize:8, formatter:function(v){return 'R$'+v.toFixed(0);}} },
+    yAxis: { type:'category', data:rev, axisLabel:{fontSize:9, fontWeight:'bold'}, axisLine:{show:false}, axisTick:{show:false} },
+    series: [{ type:'bar', data:rev.map(function(cnl){return{value:canalData[cnl].cpl,itemStyle:{color:coresCanal[cnl],borderRadius:[0,3,3,0]}};}), barWidth:'55%', label:{show:true, position:'right', fontSize:8, formatter:function(p){return 'R$ '+p.value.toFixed(0);}} }]
+  });
+})();
+
+(function() {
+  var cols = ['Campanha','Canal','Investimento','Conversões','CPL (R$)'];
+  var data = campanhas.map(function(c) {
+    return [c.nome, c.canal, c.investimento.toString(), c.conversoes.toString(), c.cpl.toFixed(2).toString()];
+  });
+  data.sort(function(a,b) { return parseFloat(b[4]) - parseFloat(a[4]); });
+  renderTable('table-eficiencia', cols, data, { 2:'moeda', 3:'num', 4:'moeda' });
+})();
+
+lucide.createIcons();
+</script>
+</body>
+</html>

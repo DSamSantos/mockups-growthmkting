@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sebrae BI — Home</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="_shared/design-system.css">
+<style>
+.callout {
+  background: var(--blue-05);
+  border: 1px solid var(--blue-20);
+  border-radius: var(--radius-md);
+  padding: 24px;
+}
+.callout p {
+  font-size: var(--fs-md);
+  color: var(--gray-70);
+  line-height: 1.7;
+  margin: 0 0 8px 0;
+}
+.callout p:last-child {
+  margin-bottom: 0;
+}
+.callout strong {
+  color: var(--blue-70);
+}
+.dash-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.dash-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--blue-60);
+  text-decoration: none;
+  margin-top: 10px;
+  transition: color .2s;
+}
+.dash-link:hover {
+  color: var(--blue-70);
+}
+.dash-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+  margin-top: 8px;
+}
+.dash-details li {
+  font-size: var(--fs-sm);
+  color: var(--gray-60);
+  line-height: 1.6;
+  list-style: none;
+  padding-left: 14px;
+  position: relative;
+}
+.dash-details li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gray-30);
+}
+.card-footer-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray-10);
+}
+.checklist-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--fs-sm);
+  color: var(--gray-70);
+  line-height: 1.5;
+}
+.checklist-item .check-icon {
+  color: var(--green);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 32px;
+  margin-top: 12px;
+}
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--fs-sm);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--gray-10);
+}
+.status-row:last-child {
+  border-bottom: none;
+}
+@media (max-width: 768px) {
+  .dash-details {
+    grid-template-columns: 1fr;
+  }
+  .checklist-grid {
+    grid-template-columns: 1fr;
+  }
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">S</div>
+    <h1>Sebrae BI</h1>
+    <span class="badge">TO-BE</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" href="Home.html">
+      <span class="icon" data-lucide="layout-dashboard"></span>
+      Home
+    </a>
+    <a class="nav-item" href="D10-D12_executive.html">
+      <span class="icon" data-lucide="bar-chart-3"></span>
+      Painel Estratégico
+    </a>
+    <a class="nav-item" href="DC_Contratos.html">
+      <span class="icon" data-lucide="file-text"></span>
+      Dash Contratos
+    </a>
+    <a class="nav-item" href="Base_de_Leads.html">
+      <span class="icon" data-lucide="route"></span>
+      Base de Leads
+    </a>
+    <a class="nav-item" href="D13_Campanhas.html">
+      <span class="icon" data-lucide="megaphone"></span>
+      Campanhas
+    </a>
+    <a class="nav-item" href="D9_Performance.html">
+      <span class="icon" data-lucide="layers"></span>
+      Performance Multicanal
+    </a>
+  </nav>
+</aside>
+
+<div class="main">
+  <header class="header">
+    <div class="header-left">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <span data-lucide="menu" style="width:22px;height:22px;"></span>
+      </button>
+      <span class="breadcrumb">Sebrae BI / <strong id="pageTitle">Home</strong></span>
+    </div>
+    <div class="header-right">
+      <span class="phase">Fase 4 — Especificações Completas</span>
+      <span>v2.0</span>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page active" id="page-home">
+      <div class="page-header">
+        <h2>Ecossistema TO-BE — Guia de Validação</h2>
+        <p>Mockups de alta fidelidade dos 6 dashboards Sebrae BI &middot; Directy &amp; Health &rarr; Sebrae</p>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="label">Dashboards Ativos</div>
+          <div class="value">6</div>
+          <div class="change up">+2 vs. AS-IS</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">KPIs Mapeados</div>
+          <div class="value">43</div>
+          <div class="change neutral">Catálogo completo</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Fontes de Dados</div>
+          <div class="value">6</div>
+          <div class="change neutral">Datorama + Sales Cloud + MC</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Fase Atual</div>
+          <div class="value" style="font-size:var(--fs-xl);margin-top:6px;">Fase 4/4</div>
+          <div class="change neutral">Specs Completas + QA</div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p>
+          <strong>Contexto da Entrega</strong>
+        </p>
+        <p>
+          Esta página consolida os <strong>6 mockups de alta fidelidade</strong> do ecossistema TO-BE Sebrae BI,
+          elaborados pela <strong>Directy &amp; Health</strong> com base nas etapas anteriores do projeto:
+        </p>
+        <ul style="margin:8px 0 0 0;padding-left:20px;font-size:var(--fs-sm);color:var(--gray-60);line-height:1.8;">
+          <li>Diagnóstico AS-IS dos 11 dashboards legados do Datorama</li>
+          <li>Catálogo de 43 KPIs mapeados e validados com as áreas de negócio</li>
+          <li>Jornadas do cliente (J1 a J5) e segmentação por Perfil &times; Produto</li>
+          <li>Especificações técnicas de fontes, fórmulas e regras de negócio</li>
+        </ul>
+        <p style="margin-top:12px;">
+          Cada mockup é <strong>interativo</strong> (ECharts 5.5+) e simula dados realistas para demonstrar
+          visões, filtros, hierarquias de navegação e storytelling visual.
+          <br><br>
+          <strong>Próximo passo:</strong> implementação pela <strong>Valtech</strong> no Salesforce Marketing Cloud
+          Intelligence (ex-Datorama), com base nestes mockups e nas especificações complementares.
+        </p>
+      </div>
+
+      <div class="page-header" style="margin-top:28px;padding-bottom:8px;">
+        <h2>Os Dashboards</h2>
+        <p>Navegue pelos 6 dashboards do ecossistema TO-BE</p>
+      </div>
+
+      <div class="row col-3">
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Painel Estratégico</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div class="dash-icon" style="background:var(--blue-10);">
+              <span data-lucide="bar-chart-3" style="width:20px;height:20px;color:var(--blue-60);"></span>
+            </div>
+            <div style="flex:1;">
+              <p style="font-size:var(--fs-sm);color:var(--gray-50);line-height:1.6;margin:0;">
+                Visão consolidada para a alta gestão com 4 abas: Executive Summary,
+                Portfólios, Jornada 360&deg; e Canais.
+              </p>
+              <ul class="dash-details">
+                <li>ISC, IE, NPS, Cobertura</li>
+                <li>RFV e Satisfação por portfólio</li>
+                <li>Jornada do cliente por etapa</li>
+                <li>Performance por canal e perfil</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer-status">
+            <div>
+              <span class="badge badge-blue">4 abas</span>
+              <span class="badge badge-teal" style="margin-left:6px;">QA Aprovado</span>
+            </div>
+            <a class="dash-link" href="D10-D12_executive.html">
+              Abrir dash
+              <span data-lucide="arrow-right" style="width:14px;height:14px;"></span>
+            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Dash Contratos</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div class="dash-icon" style="background:var(--purple-bg);">
+              <span data-lucide="file-text" style="width:20px;height:20px;color:var(--purple);"></span>
+            </div>
+            <div style="flex:1;">
+              <p style="font-size:var(--fs-sm);color:var(--gray-50);line-height:1.6;margin:0;">
+                Gestão de contratos de disparo: créditos SMS, E-mail, WhatsApp — consumo, saldo e alertas.
+              </p>
+              <ul class="dash-details">
+                <li>Consumo vs. contratado por canal</li>
+                <li>Pacing e projeção de esgotamento</li>
+                <li>Ticket médio por fornecedor</li>
+                <li>Alerta de renovação e risco</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer-status">
+            <div>
+              <span class="badge badge-purple">QA Aprovado</span>
+            </div>
+            <a class="dash-link" href="DC_Contratos.html">
+              Abrir dash
+              <span data-lucide="arrow-right" style="width:14px;height:14px;"></span>
+            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Base de Leads</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div class="dash-icon" style="background:var(--teal-bg);">
+              <span data-lucide="route" style="width:20px;height:20px;color:var(--teal);"></span>
+            </div>
+            <div style="flex:1;">
+              <p style="font-size:var(--fs-sm);color:var(--gray-50);line-height:1.6;margin:0;">
+                Funil completo por perfil, coorte de retenção, ISC por etapa, overlap e capping de campanhas.
+              </p>
+              <ul class="dash-details">
+                <li>Volume por etapa do funil</li>
+                <li>Coorte de retenção mensal</li>
+                <li>ISC por etapa e perfil</li>
+                <li>Overlap e capping de campanhas</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer-status">
+            <div>
+              <span class="badge badge-teal">QA Aprovado</span>
+            </div>
+            <a class="dash-link" href="Base_de_Leads.html">
+              Abrir dash
+              <span data-lucide="arrow-right" style="width:14px;height:14px;"></span>
+            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Campanhas</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div class="dash-icon" style="background:var(--amber-bg);">
+              <span data-lucide="megaphone" style="width:20px;height:20px;color:var(--amber);"></span>
+            </div>
+            <div style="flex:1;">
+              <p style="font-size:var(--fs-sm);color:var(--gray-50);line-height:1.6;margin:0;">
+                Deep dive tático por BU e portfólio: ISC, CPL, ROI, matriz ISC&times;Investimento e overlap.
+              </p>
+              <ul class="dash-details">
+                <li>ISC e CPL por campanha</li>
+                <li>Matriz ISC &times; Investimento</li>
+                <li>Treemap por portfólio</li>
+                <li>Overlap e canibalização entre campanhas</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer-status">
+            <div>
+              <span class="badge badge-amber">QA Aprovado</span>
+            </div>
+            <a class="dash-link" href="D13_Campanhas.html">
+              Abrir dash
+              <span data-lucide="arrow-right" style="width:14px;height:14px;"></span>
+            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Performance Multicanal</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div class="dash-icon" style="background:var(--green-bg);">
+              <span data-lucide="layers" style="width:20px;height:20px;color:var(--green);"></span>
+            </div>
+            <div style="flex:1;">
+              <p style="font-size:var(--fs-sm);color:var(--gray-50);line-height:1.6;margin:0;">
+                ISC por canal, cobertura, engajamento e tendências comparativas por perfil e período.
+              </p>
+              <ul class="dash-details">
+                <li>ISC por canal e perfil</li>
+                <li>Cobertura da base</li>
+                <li>CTR, CTOR e taxa de conversão</li>
+                <li>Tendência temporal e comparativo</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer-status">
+            <div>
+              <span class="badge badge-green" style="background:var(--green-bg);color:var(--green);">QA Aprovado</span>
+            </div>
+            <a class="dash-link" href="D9_Performance.html">
+              Abrir dash
+              <span data-lucide="arrow-right" style="width:14px;height:14px;"></span>
+            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Jornada do Cliente</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div class="dash-icon" style="background:var(--gray-10);">
+              <span data-lucide="git-branch" style="width:20px;height:20px;color:var(--gray-50);"></span>
+            </div>
+            <div style="flex:1;">
+              <p style="font-size:var(--fs-sm);color:var(--gray-50);line-height:1.6;margin:0;">
+                Funil consolidado da jornada do cliente com ISC por etapa &mdash; <em>placeholder em especificação</em>.
+              </p>
+              <ul class="dash-details">
+                <li>Volume por etapa da jornada</li>
+                <li>ISC por etapa e perfil</li>
+                <li>Taxa de avanço entre etapas</li>
+                <li>Tempo médio por etapa</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer-status">
+            <div>
+              <span class="badge" style="background:var(--gray-10);color:var(--gray-50);">Placeholder</span>
+            </div>
+            <span style="font-size:var(--fs-sm);color:var(--gray-40);">Em especificação</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="card" style="margin-top:0;">
+        <div class="card-header">
+          <span class="card-title">Como Validar os Mockups</span>
+        </div>
+        <p style="font-size:var(--fs-sm);color:var(--gray-50);line-height:1.6;margin:0;">
+          Utilize esta seção como checklist durante a revisão de cada dashboard.
+          Registre seus apontamentos para o ciclo de ajustes finos antes da entrega à Valtech para implementação.
+        </p>
+
+        <div style="margin-top:16px;">
+          <p style="font-size:var(--fs-sm);font-weight:600;color:var(--gray-70);margin:0 0 8px 0;">
+            Navegação &amp; Experiência
+          </p>
+          <div class="checklist-grid">
+            <div class="checklist-item">
+              <span class="check-icon" data-lucide="check-circle" style="width:16px;height:16px;"></span>
+              <span>A sidebar à esquerda permite alternar rapidamente entre dashboards?</span>
+            </div>
+            <div class="checklist-item">
+              <span class="check-icon" data-lucide="check-circle" style="width:16px;height:16px;"></span>
+              <span>As abas no topo dividem corretamente as visões de cada dashboard?</span>
+            </div>
+            <div class="checklist-item">
+              <span class="check-icon" data-lucide="check-circle" style="width:16px;height:16px;"></span>
+              <span>Os accordions "Storytelling" contam a análise descritiva de forma clara?</span>
+            </div>
+            <div class="checklist-item">
+              <span class="check-icon" data-lucide="check-circle" style="width:16px;height:16px;"></span>
+              <span>Os filtros disponíveis (período, canal, perfil) atendem às necessidades da sua área?</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <p style="font-size:var(--fs-sm);font-weight:600;color:var(--gray-70);margin:0 0 8px 0;">
+            Conteúdo &amp; Negócio
+          </p>
+          <div class="checklist-grid">
+            <div class="checklist-item">
+              <span class="check-icon" data-lucide="check-circle" style="width:16px;height:16px;"></span>
+              <span>Os indicadores e métricas correspondem às regras de negócio definidas?</span>
+            </div>
+            <div class="checklist-item">
+              <span class="check-icon" data-lucide="check-circle" style="width:16px;height:16px;"></span>
+              <span>A segmentação por perfil (MEI, ME, EPP, Prod. Rural, Informal) está correta?</span>
+            </div>
+            <div class="checklist-item">
+              <span class="check-icon" data-lucide="check-circle" style="width:16px;height:16px;"></span>
+              <span>O storytelling visual conta a história certa para cada nível de decisão?</span>
+            </div>
+            <div class="checklist-item">
+              <span class="check-icon" data-lucide="check-circle" style="width:16px;height:16px;"></span>
+              <span>Os dados simulados nos gráficos representam cenários e magnitudes realistas?</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:0;">
+        <div class="card-header">
+          <span class="card-title">Status do Projeto</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:var(--fs-sm);margin-bottom:4px;">
+              <span><strong>Fase 1</strong> — Discovery AS-IS (11 dashboards legados)</span>
+              <span style="color:var(--green);font-weight:600;">Concluído</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green);"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:var(--fs-sm);margin-bottom:4px;">
+              <span><strong>Fase 2</strong> — Especificações de KPIs e Jornadas</span>
+              <span style="color:var(--green);font-weight:600;">Concluído</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green);"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:var(--fs-sm);margin-bottom:4px;">
+              <span><strong>Fase 3</strong> — Mockups TO-BE (6 dashboards interativos)</span>
+              <span style="color:var(--green);font-weight:600;">Concluído</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green);"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:var(--fs-sm);margin-bottom:4px;">
+              <span><strong>Fase 4</strong> — Validação Sebrae + QA Final</span>
+              <span style="color:var(--amber);font-weight:600;">Aguardando retorno</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:75%;background:var(--amber);"></div></div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;">
+          <p style="font-size:var(--fs-sm);font-weight:600;color:var(--gray-70);margin:0 0 8px 0;">
+            Status por Dashboard
+          </p>
+          <div class="status-grid">
+            <div class="status-row"><span>Painel Estratégico</span><span style="color:var(--green);font-weight:600;">QA Aprovado</span></div>
+            <div class="status-row"><span>Dash Contratos</span><span style="color:var(--green);font-weight:600;">QA Aprovado</span></div>
+            <div class="status-row"><span>Base de Leads</span><span style="color:var(--green);font-weight:600;">QA Aprovado</span></div>
+            <div class="status-row"><span>Campanhas</span><span style="color:var(--green);font-weight:600;">QA Aprovado</span></div>
+            <div class="status-row"><span>Performance Multicanal</span><span style="color:var(--green);font-weight:600;">QA Aprovado</span></div>
+            <div class="status-row"><span>Jornada do Cliente</span><span style="color:var(--gray-40);">Placeholder</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="_shared/framework.js"></script>
+</body>
+</html>

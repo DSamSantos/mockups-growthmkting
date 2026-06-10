@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sebrae BI — Painel Estratégico</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="_shared/design-system.css">
+<style>
+.sub-nav { display:flex; gap:4px; margin-bottom:20px; background:var(--white); border:1px solid var(--gray-20); border-radius:var(--radius-md); padding:4px; }
+.sub-nav a { flex:1; text-align:center; padding:10px 16px; border-radius:var(--radius-sm); font-size:var(--fs-sm); font-weight:500; color:var(--gray-50); text-decoration:none; transition:all 0.15s; }
+.sub-nav a:hover { background:var(--gray-05); color:var(--gray-70); }
+.sub-nav a.active { background:var(--blue-60); color:var(--white); font-weight:600; }
+
+.gauge-wrap { display:flex; align-items:center; justify-content:center; height:100%; min-height:200px; }
+
+.canal-scorecard { display:flex; flex-direction:column; gap:4px; }
+.canal-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--gray-10); font-size:var(--fs-xs); }
+.canal-row:last-child { border-bottom:none; }
+.canal-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+.canal-label { flex:1; font-weight:500; color:var(--gray-60); }
+.canal-val { font-weight:600; color:var(--gray-80); min-width:36px; text-align:right; }
+.canal-val.isc { min-width:28px; }
+
+.heatmap-legend { display:flex; align-items:center; gap:8px; margin-top:8px; font-size:var(--fs-xs); color:var(--gray-50); }
+.heatmap-bar { width:120px; height:8px; border-radius:4px; background:linear-gradient(to right,#C62828,#F9A825,#45A1FF,#2E7D32); }
+
+.rank-col-header { font-size:var(--fs-xs); font-weight:600; color:var(--gray-50); text-transform:uppercase; letter-spacing:0.3px; padding:4px 0; border-bottom:1px solid var(--gray-20); }
+.rank-col { display:flex; align-items:center; gap:4px; }
+.rank-pos { font-size:var(--fs-xs); color:var(--gray-40); min-width:16px; }
+
+@media (max-width:1024px) {
+  .sub-nav { flex-direction:column; }
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">S</div>
+    <h1>Sebrae BI</h1>
+    <span class="badge">TO-BE</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="Home.html">
+      <span class="icon" data-lucide="layout-dashboard"></span>
+      Home
+    </a>
+    <a class="nav-item active" href="D10-D12_executive.html">
+      <span class="icon" data-lucide="bar-chart-3"></span>
+      Painel Estratégico
+    </a>
+    <a class="nav-item" href="DC_Contratos.html">
+      <span class="icon" data-lucide="file-text"></span>
+      Dash Contratos
+    </a>
+    <a class="nav-item" href="Base_de_Leads.html">
+      <span class="icon" data-lucide="route"></span>
+      Base de Leads
+    </a>
+    <a class="nav-item" href="D13_Campanhas.html">
+      <span class="icon" data-lucide="megaphone"></span>
+      Campanhas
+    </a>
+    <a class="nav-item" href="D9_Performance.html">
+      <span class="icon" data-lucide="layers"></span>
+      Performance Multicanal
+    </a>
+  </nav>
+</aside>
+
+<div class="main">
+  <header class="header">
+    <div class="header-left">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <span data-lucide="menu" style="width:22px;height:22px;"></span>
+      </button>
+      <span class="breadcrumb">Sebrae BI / <strong id="pageTitle">Painel Estratégico</strong></span>
+    </div>
+    <div class="header-right">
+      <span class="phase">Fase 1 — Setup</span>
+      <span>v1.2</span>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page active" id="page-d10-d12">
+      <div class="page-header">
+        <h2>Painel Estratégico</h2>
+        <p>Visão executiva unificada: indicadores de topo, canais, satisfação e alertas em uma única página</p>
+      </div>
+
+      <div class="sub-nav">
+        <a href="D10-D12_executive.html" class="active">Página 1 — Painel Estratégico</a>
+        <a href="D10-D12_detalhamentos.html">Página 2 — Segments & Journeys</a>
+      </div>
+
+      <div class="accordion-story">
+        <div class="accordion-story-header" onclick="toggleAccordion(this)">
+          <div style="font-size:var(--fs-xs);font-weight:600;color:var(--blue-70);text-transform:uppercase;letter-spacing:0.5px;">Storytelling — Strategic Metrics</div>
+          <span class="toggle-icon">▼</span>
+        </div>
+        <div class="accordion-story-body">
+          <div style="font-size:var(--fs-sm);color:var(--gray-60);line-height:1.5;">
+            <strong>1. Scorecards de Topo</strong> — ISC, IE, Cobertura, NPS e CSAT na mesma vista.<br>
+            <strong>2. Alertas</strong> — Top 5 notificações críticas.<br>
+            <strong>3. Tendências</strong> — Evolução mensal de ISC, IE e Cobertura.<br>
+            <strong>4. NPS &amp; CSAT</strong> — Gauge interativo e evolução temporal.<br>
+            <strong>5. Ranking BU</strong> — Desempenho consolidado por unidade (ISC · IE · Cobertura · NPS).<br>
+            <strong>6. Canais</strong> — Scorecard resumido por canal (ISC, CTR, Conversão, Opt-Out).<br>
+            <strong>7. ISC Perfil×Produto &amp; ISC por Canal</strong> — Heatmap Perfil×Produto + série temporal comparativa por canal.
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding:12px 16px;background:var(--gray-05);border-radius:var(--radius-md);border:1px solid var(--gray-15);align-items:center;">
+        <span style="font-size:var(--fs-xs);font-weight:600;color:var(--gray-50);text-transform:uppercase;letter-spacing:0.5px;">Filtros:</span>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>Perfil: Todos</option><option>MEI</option><option>ME/EPP</option><option>Informal</option><option>Produtor Rural</option></select>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>Setor/Segmento: Todos</option><option>Comércio</option><option>Serviços</option><option>Indústria</option><option>Agropecuária</option></select>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>Produto: Todos</option><option>Consultoria</option><option>Capacitação</option><option>Crédito</option><option>Cursos</option><option>Sol. Digitais</option><option>Estruturantes</option></select>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>Canal: Todos</option><option>Email</option><option>SMS</option><option>WhatsApp</option></select>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>UF: Todas</option><option>SP</option><option>MG</option><option>RJ</option><option>RS</option><option>BA</option><option>PR</option><option>SC</option><option>PE</option><option>CE</option><option>GO</option><option>outras</option></select>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>Região: Todas</option><option>Norte</option><option>Nordeste</option><option>Centro-Oeste</option><option>Sudeste</option><option>Sul</option></select>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:var(--fs-xs);font-weight:600;color:var(--gray-50);">Período:</span>
+          <span style="font-size:var(--fs-xs);font-weight:500;color:var(--gray-40);">De:</span>
+          <input type="date" style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);">
+          <span style="font-size:var(--fs-xs);font-weight:500;color:var(--gray-40);">Até:</span>
+          <input type="date" style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);">
+        </div>
+      </div>
+
+      <div style="margin-bottom:4px;margin-top:8px;"><span style="font-size:var(--fs-sm);font-weight:600;color:var(--gray-50);letter-spacing:0.5px;text-transform:uppercase;">1. Scorecards de Topo</span><span style="font-size:var(--fs-xs);color:var(--gray-40);margin-left:8px;">ISC · IE · Cobertura · NPS · CSAT — visão executiva</span></div>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="label">ISC — Índice de Sucesso da Campanha</div>
+          <div class="value">2,8</div>
+          <div class="change up"><span class="trend-icon">↑</span>0,3 vs. trim. anterior</div>
+          <div class="sub">Meta: 4,0 · Atual: 2,8</div>
+          <div style="margin-top:10px;position:relative;">
+            <div class="progress-bar-zoned">
+              <div class="progress-fill-translucent" style="width:47%;"></div>
+            </div>
+            <div class="progress-marker" style="left:67%;" title="Meta: 4,0"></div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">IE — Índice de Engajamento</div>
+          <div class="value">62,1%</div>
+          <div class="change up"><span class="trend-icon">↑</span>5,7 p.p. vs. trim. anterior</div>
+          <div class="sub">Meta: 65% · Atingimento: 96%</div>
+          <div style="margin-top:10px;"><div class="progress-bar"><div class="progress-fill" style="width:62%;background:var(--orange-60);"></div></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Cobertura da Base</div>
+          <div class="value">43,8%</div>
+          <div class="change up"><span class="trend-icon">↑</span>2,1 p.p. vs. trim. anterior</div>
+          <div class="sub">Base total: 12,4M · Base coberta: 5,4M</div>
+          <div style="margin-top:10px;"><div class="progress-bar"><div class="progress-fill" style="width:44%;background:var(--teal);"></div></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">NPS</div>
+          <div class="value" style="color:var(--green);">+70</div>
+          <div class="change up"><span class="trend-icon">↑</span>+8 pts vs. trim. anterior</div>
+          <div class="sub">Fonte: Indecx · 38% Promotores</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">CSAT</div>
+          <div class="value">4,2 <span style="font-size:var(--fs-lg);">★</span></div>
+          <div class="change up"><span class="trend-icon">↑</span>+0,3 vs. trim. anterior</div>
+          <div class="sub">Fonte: Indecx · Base: 2.847 resp.</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:4px;margin-top:16px;"><span style="font-size:var(--fs-sm);font-weight:600;color:var(--gray-50);letter-spacing:0.5px;text-transform:uppercase;">2. Alertas</span><span style="font-size:var(--fs-xs);color:var(--gray-40);margin-left:8px;">Top 5 notificações críticas do ecossistema</span></div>
+      <div class="kpi-grid">
+        <div class="kpi-card" style="grid-column: span 2;">
+          <div class="label">Top 5 Alertas</div>
+          <div style="margin-top:6px;display:flex;flex-direction:column;gap:4px;font-size:var(--fs-sm);">
+            <span style="display:flex;align-items:center;gap:6px;"><span class="badge badge-red">●</span> ISC crítico — SMS abaixo de 1,0 pelo 2º mês consecutivo</span>
+            <span style="display:flex;align-items:center;gap:6px;"><span class="badge badge-amber">●</span> CPL acima da meta — R$ 5,80 vs R$ 5,00</span>
+            <span style="display:flex;align-items:center;gap:6px;"><span class="badge badge-amber">●</span> Opt-Out elevado — SMS > 1% no mês</span>
+            <span style="display:flex;align-items:center;gap:6px;"><span class="badge badge-red">●</span> ROI negativo provável — Campanha 'Recuperação SMS' (ISC 0,2)</span>
+            <span style="display:flex;align-items:center;gap:6px;"><span class="badge badge-amber">●</span> Cobertura baixa no Norte — < 30% em 3 UFs</span>
+          </div>
+          <div class="sub" style="margin-top:6px;">Fonte: Todos os dashboards</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:4px;margin-top:16px;"><span style="font-size:var(--fs-sm);font-weight:600;color:var(--gray-50);letter-spacing:0.5px;text-transform:uppercase;">3. Tendências</span><span style="font-size:var(--fs-xs);color:var(--gray-40);margin-left:8px;">ISC · IE · Cobertura — evolução mensal</span></div>
+      <div class="row col-3">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">ISC — Evolução Mensal</span>
+            <span class="card-subtitle">Índice vs meta</span>
+          </div>
+          <div class="chart-container chart-container-sm" id="chart-isc-evolution"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Cobertura — Evolução Mensal</span>
+            <span class="card-subtitle">% da base contactada</span>
+          </div>
+          <div class="chart-container chart-container-sm" id="chart-cobertura-evolution"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">IE — Evolução Mensal</span>
+            <span class="card-subtitle">% PN com ≥ 200 pts (Ind. 2.3)</span>
+          </div>
+          <div class="chart-container chart-container-sm" id="chart-ie-evolution"></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:4px;margin-top:16px;"><span style="font-size:var(--fs-sm);font-weight:600;color:var(--gray-50);letter-spacing:0.5px;text-transform:uppercase;">4. NPS &amp; CSAT</span><span style="font-size:var(--fs-xs);color:var(--gray-40);margin-left:8px;">NPS Gauge · Evolução trimestral · CSAT mensal</span></div>
+      <div class="row col-3">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">NPS Gauge</span>
+            <span class="card-subtitle">Score atual: +80 · Zona Excelente</span>
+          </div>
+          <div class="gauge-wrap">
+            <svg viewBox="0 0 220 200" style="width:100%;max-width:220px;">
+              <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="#E8E8E8" stroke-width="18" stroke-linecap="round"/>
+              <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="#2E7D32" stroke-width="18" stroke-linecap="round"
+                    stroke-dasharray="226.2 282.7" stroke-dashoffset="0" style="transition:stroke-dasharray 0.6s ease"/>
+              <text x="110" y="112" text-anchor="middle" font-size="32" font-weight="700" fill="#2E7D32">+80</text>
+              <text x="110" y="136" text-anchor="middle" font-size="13" fill="#666">NPS</text>
+              <text x="110" y="155" text-anchor="middle" font-size="10" fill="#999">Zona Excelente</text>
+            </svg>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">NPS — Evolução Trimestral</span>
+            <span class="card-subtitle">Fonte: Indecx</span>
+          </div>
+          <div class="chart-container chart-container-sm" id="chart-nps-evolution"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">CSAT — Evolução Mensal</span>
+            <span class="card-subtitle">Fonte: Indecx</span>
+          </div>
+          <div class="chart-container chart-container-sm" id="chart-csat-evolution"></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:4px;margin-top:16px;"><span style="font-size:var(--fs-sm);font-weight:600;color:var(--gray-50);letter-spacing:0.5px;text-transform:uppercase;">5. Ranking BU</span><span style="font-size:var(--fs-xs);color:var(--gray-40);margin-left:8px;">ISC · IE · Cobertura · NPS · Variação — consolidado por unidade</span></div>
+      <div class="row">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Desempenho por BU</span>
+            <span class="card-subtitle">Ordenado por ISC (decrescente)</span>
+            <div style="margin-left:auto;display:flex;gap:10px;font-size:10px;">
+              <span class="badge badge-green">ISC > 4</span>
+              <span class="badge badge-amber">ISC 1–4</span>
+              <span class="badge badge-red">ISC < 1</span>
+            </div>
+          </div>
+          <div class="table-container scrollable" id="table-ranking-bu" style="max-height:280px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:4px;margin-top:16px;"><span style="font-size:var(--fs-sm);font-weight:600;color:var(--gray-50);letter-spacing:0.5px;text-transform:uppercase;">6. Canais</span><span style="font-size:var(--fs-xs);color:var(--gray-40);margin-left:8px;">ISC · CTR · Conversão · Opt-Out por canal</span></div>
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Scorecard de Canais</span>
+            <span class="card-subtitle">ISC médio, CTR, Conversão e Opt-Out por canal</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr><th>Canal</th><th>ISC Médio</th><th>CTR</th><th>Conversão</th><th>Opt-Out</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><span style="display:flex;align-items:center;gap:6px;"><span class="canal-dot" style="background:#2E7D32;"></span>WhatsApp</span></td><td style="color:var(--green);font-weight:600;">3,2</td><td>8,5%</td><td>4,2%</td><td>0,08%</td><td><span class="badge badge-green">Excelente</span></td></tr>
+                <tr><td><span style="display:flex;align-items:center;gap:6px;"><span class="canal-dot" style="background:#0060DF;"></span>Email</span></td><td style="color:var(--amber);font-weight:600;">2,1</td><td>3,2%</td><td>2,2%</td><td>0,12%</td><td><span class="badge badge-amber">Estável</span></td></tr>
+                <tr><td><span style="display:flex;align-items:center;gap:6px;"><span class="canal-dot" style="background:#C62828;"></span>SMS</span></td><td style="color:var(--red);font-weight:600;">0,9</td><td>1,2%</td><td>0,4%</td><td>1,2%</td><td><span class="badge badge-red">Crítico</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:12px;font-size:var(--fs-xs);color:var(--gray-50);">
+            <span><strong>Total Disparos (mês):</strong> 12,8M</span>
+            <span><strong>Canais ativos:</strong> 3 (Email · SMS · WhatsApp)</span>
+            <span><strong>Crescimento:</strong> +8,3% vs mês ant.</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Cobertura por Perfil</span>
+          </div>
+          <div class="chart-container chart-container-sm" id="chart-cobertura-perfil"></div>
+          <div style="margin-top:8px;"><span style="font-size:var(--fs-xs);color:var(--gray-40);">% da base contactada por perfil de cliente</span></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:4px;margin-top:16px;"><span style="font-size:var(--fs-sm);font-weight:600;color:var(--gray-50);letter-spacing:0.5px;text-transform:uppercase;">7. ISC Perfil×Produto &amp; ISC por Canal</span><span style="font-size:var(--fs-xs);color:var(--gray-40);margin-left:8px;">Heatmap Perfil×Produto · Série temporal comparativa por canal</span></div>
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">ISC Perfil × Produto</span>
+            <span class="card-subtitle">Células mais escuras = maior ISC · Identificar lacunas e oportunidades</span>
+          </div>
+          <div class="chart-container chart-container-lg" id="chart-isc-heatmap"></div>
+          <div class="heatmap-legend">
+            <span>Baixo ISC</span>
+            <div class="heatmap-bar" style="background:linear-gradient(to right,#E8E8E8,#90C8F8,#0045A3);"></div>
+            <span>Alto ISC</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">ISC Mensal por Canal</span>
+            <span class="card-subtitle">Limiar excellence (4,0) · alerta (1,0)</span>
+          </div>
+          <div class="chart-container" id="chart-isc-canal-series"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="_shared/framework.js"></script>
+<script>
+// Tendências — ISC Evolução
+initChart('chart-isc-evolution', {
+  tooltip: { trigger: 'axis' },
+  grid: { top: 10, right: 10, bottom: 30, left: 40 },
+  xAxis: { type: 'category', data: ['Jul/25','Ago/25','Set/25','Out/25','Nov/25','Dez/25','Jan/26','Fev/26','Mar/26','Abr/26','Mai/26','Jun/26'], axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', min: 0, max: 5, axisLabel: { fontSize: 10 }, name: 'ISC', nameTextStyle: { fontSize: 9 } },
+  series: [
+    { name: 'ISC', type: 'line', data: [2.2, 2.4, 2.5, 2.6, 2.8, 2.7, 2.9, 3.0, 2.8, 3.1, 3.0, 2.8], smooth: true, lineStyle: { width: 2, color: '#0060DF' }, symbol: 'circle', symbolSize: 5, color: '#0060DF', areaStyle: { opacity: 0.08, color: '#0060DF' } },
+    { name: 'Meta (4,0)', type: 'line', data: [4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0], lineStyle: { width: 1, type: 'dashed', color: '#2E7D32' }, symbol: 'none' }
+  ]
+});
+
+// Tendências — Cobertura Evolução
+initChart('chart-cobertura-evolution', {
+  tooltip: { trigger: 'axis' },
+  grid: { top: 10, right: 10, bottom: 30, left: 40 },
+  xAxis: { type: 'category', data: ['Jul/25','Ago/25','Set/25','Out/25','Nov/25','Dez/25','Jan/26','Fev/26','Mar/26','Abr/26','Mai/26','Jun/26'], axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', min: 30, max: 50, axisLabel: { fontSize: 10, formatter: '{value}%' }, name: '%', nameTextStyle: { fontSize: 9 } },
+  series: [
+    { name: 'Cobertura', type: 'line', data: [36.2, 37.1, 38.0, 38.5, 39.2, 39.8, 40.5, 41.0, 41.8, 42.5, 43.2, 43.8], smooth: true, lineStyle: { width: 2, color: '#00897B' }, symbol: 'diamond', symbolSize: 5, color: '#00897B', areaStyle: { opacity: 0.08, color: '#00897B' } }
+  ]
+});
+
+// Tendências — IE Evolução
+initChart('chart-ie-evolution', {
+  tooltip: { trigger: 'axis' },
+  grid: { top: 10, right: 10, bottom: 30, left: 40 },
+  xAxis: { type: 'category', data: ['Jul/25','Ago/25','Set/25','Out/25','Nov/25','Dez/25','Jan/26','Fev/26','Mar/26','Abr/26','Mai/26','Jun/26'], axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', min: 50, max: 70, axisLabel: { fontSize: 10, formatter: '{value}%' }, name: '%', nameTextStyle: { fontSize: 9 } },
+  series: [
+    { name: 'IE', type: 'line', data: [54.0, 55.2, 56.1, 57.0, 58.5, 59.0, 60.2, 60.8, 61.5, 62.0, 62.5, 62.1], smooth: true, lineStyle: { width: 2, color: '#F9A825' }, symbol: 'triangle', symbolSize: 5, color: '#F9A825', areaStyle: { opacity: 0.08, color: '#F9A825' } }
+  ]
+});
+
+// NPS — Evolução Trimestral
+initChart('chart-nps-evolution', {
+  tooltip: { trigger: 'axis' },
+  grid: { top: 25, right: 10, bottom: 35, left: 45 },
+  xAxis: { type: 'category', data: ['3T25', '4T25', '1T26', '2T26'], axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', min: 50, max: 80, axisLabel: { fontSize: 10 } },
+  series: [
+    { name: 'NPS', type: 'line', data: [58, 62, 65, 70], smooth: true, lineStyle: { width: 2, color: '#2E7D32' }, symbol: 'circle', symbolSize: 6, color: '#2E7D32', areaStyle: { opacity: 0.1, color: '#2E7D32' } }
+  ]
+});
+
+// CSAT — Evolução Mensal
+initChart('chart-csat-evolution', {
+  tooltip: { trigger: 'axis' },
+  grid: { top: 10, right: 10, bottom: 30, left: 40 },
+  xAxis: { type: 'category', data: ['Jul/25','Ago/25','Set/25','Out/25','Nov/25','Dez/25','Jan/26','Fev/26','Mar/26','Abr/26','Mai/26','Jun/26'], axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', min: 3, max: 5, axisLabel: { fontSize: 10 } },
+  series: [
+    { name: 'CSAT', type: 'line', data: [3.8, 3.9, 3.9, 4.0, 4.0, 4.1, 4.1, 4.2, 4.2, 4.3, 4.2, 4.2], smooth: true, lineStyle: { width: 2, color: '#0060DF' }, symbol: 'circle', symbolSize: 5, color: '#0060DF', areaStyle: { opacity: 0.08, color: '#0060DF' } }
+  ]
+});
+
+// Cobertura por Perfil
+initChart('chart-cobertura-perfil', {
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 10, right: 10, bottom: 30, left: 60 },
+  xAxis: { type: 'category', data: ['MEI', 'ME/EPP', 'Informal', 'Prod. Rural'], axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', axisLabel: { fontSize: 10, formatter: '{value}%' }, name: '%', nameTextStyle: { fontSize: 9 } },
+  series: [
+    { type: 'bar', data: [38, 52, 22, 28], itemStyle: { color: '#0080FF', borderRadius: [4,4,0,0] }, barWidth: '50%', label: { show: true, position: 'top', formatter: function(p) { return p.data + '%'; }, fontSize: 10, fontWeight: 600 } }
+  ]
+});
+
+// ISC Heatmap (Perfil × Produto)
+var perfis = ['MEI', 'ME/EPP', 'Informal', 'Prod. Rural'];
+var produtos = ['Consultoria', 'Capacitação', 'Crédito', 'Cursos', 'Sol. Digitais', 'Estruturantes'];
+var heatData = [];
+var iscVals = [
+  [3.2, 2.8, 3.5, 2.0, 1.8, 1.2],
+  [3.8, 3.2, 4.2, 2.5, 2.0, 1.5],
+  [2.0, 1.5, 1.8, 1.2, 0.8, 0.5],
+  [2.5, 2.0, 2.8, 1.8, 1.0, 0.8]
+];
+for (var i = 0; i < perfis.length; i++) {
+  for (var j = 0; j < produtos.length; j++) {
+    heatData.push([j, i, iscVals[i][j]]);
+  }
+}
+initChart('chart-isc-heatmap', {
+  tooltip: { position: 'top', formatter: function(p) { return perfis[p.data[1]] + ' × ' + produtos[p.data[0]] + '<br/>ISC: <b>' + p.data[2].toFixed(1) + '</b>'; } },
+  grid: { top: 10, right: 40, bottom: 60, left: 80 },
+  xAxis: { type: 'category', data: produtos, axisLabel: { fontSize: 10, rotate: 30 } },
+  yAxis: { type: 'category', data: perfis, axisLabel: { fontSize: 11 } },
+  visualMap: { min: 0, max: 5, calculable: true, orient: 'vertical', right: 0, top: 'center', inRange: { color: ['#E8E8E8', '#D0E5F5', '#80BCFF', '#0080FF', '#0045A3'] } },
+  series: [{
+    type: 'heatmap',
+    data: heatData,
+    label: { show: true, formatter: function(p) { return p.data[2].toFixed(1); }, fontSize: 10, fontWeight: 600, color: '#1C1C1C' },
+    emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' } }
+  }]
+});
+
+// ISC por Canal — Série Temporal
+initChart('chart-isc-canal-series', {
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { top: 10, right: 20, bottom: 55, left: 50 },
+  xAxis: { type: 'category', data: ['Jul/25', 'Ago/25', 'Set/25', 'Out/25', 'Nov/25', 'Dez/25', 'Jan/26', 'Fev/26', 'Mar/26', 'Abr/26', 'Mai/26', 'Jun/26'], axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', min: 0, max: 6, axisLabel: { fontSize: 11 }, name: 'ISC', nameTextStyle: { fontSize: 10 } },
+  series: [
+    { name: 'WhatsApp', type: 'line', data: [2.8, 3.0, 3.1, 3.2, 3.4, 3.5, 3.6, 3.5, 3.7, 3.8, 3.6, 3.2], smooth: true, lineStyle: { width: 2.5, color: '#2E7D32' }, symbol: 'circle', symbolSize: 5, color: '#2E7D32' },
+    { name: 'Email', type: 'line', data: [2.2, 2.3, 2.4, 2.3, 2.1, 2.5, 2.6, 2.7, 2.8, 2.6, 2.5, 2.1], smooth: true, lineStyle: { width: 2.5, color: '#0060DF' }, symbol: 'diamond', symbolSize: 5, color: '#0060DF' },
+    { name: 'SMS', type: 'line', data: [1.8, 1.6, 1.5, 1.4, 1.2, 1.3, 1.2, 1.1, 1.0, 0.9, 0.8, 0.9], smooth: true, lineStyle: { width: 2.5, color: '#F9A825' }, symbol: 'triangle', symbolSize: 5, color: '#F9A825' },
+    { name: 'Meta (4,0)', type: 'line', data: [4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0], lineStyle: { width: 1.5, type: 'dashed', color: '#666666' }, symbol: 'none', color: '#666666' },
+    { name: 'Alerta (1,0)', type: 'line', data: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], lineStyle: { width: 1.5, type: 'dashed', color: '#C62828' }, symbol: 'none', color: '#C62828' }
+  ]
+});
+
+// Ranking BU consolidado
+var rankBuData = [
+  ['1','SP','4,8','78,0%','55,0%','72','+0,2','Alta',2800],
+  ['2','MG','4,2','74,0%','50,0%','68','+0,4','Alta',1400],
+  ['3','RJ','3,9','70,0%','47,0%','62','+0,1','Média',1200],
+  ['4','RS','3,5','67,0%','44,0%','60','-0,2','Média',900],
+  ['5','PR','3,2','64,0%','39,0%','58','+0,3','Média',800],
+  ['6','SC','3,0','62,0%','40,0%','55','+0,5','Média',600],
+  ['7','DF','2,8','60,0%','38,0%','52','-0,1','Média',400],
+  ['8','ES','2,6','58,0%','37,0%','50','+0,2','Média',350],
+  ['9','GO','2,4','56,0%','36,0%','48','+0,1','Média',350],
+  ['10','MS','2,2','54,0%','35,0%','45','-0,3','Média',200],
+  ['11','MT','2,0','52,0%','34,0%','42','+0,2','Média',200],
+  ['12','BA','1,9','50,0%','41,0%','48','+0,1','Média',600],
+  ['13','PE','1,8','49,0%','33,0%','44','-0,1','Média',500],
+  ['14','CE','1,7','48,0%','32,0%','42','+0,3','Média',450],
+  ['15','RN','1,6','47,0%','31,0%','40','0,0','Média',200],
+  ['16','PB','1,5','46,0%','30,0%','38','-0,2','Média',180],
+  ['17','SE','1,4','45,0%','29,0%','36','+0,1','Média',150],
+  ['18','AL','1,3','44,0%','28,0%','34','-0,4','Média',120],
+  ['19','PI','1,2','43,0%','27,0%','32','-0,1','Baixa',120],
+  ['20','MA','1,1','42,0%','26,0%','30','+0,2','Baixa',150],
+  ['21','PA','1,0','41,0%','25,0%','28','0,0','Baixa',200],
+  ['22','AM','0,9','40,0%','24,0%','26','-0,3','Baixa',100],
+  ['23','RO','0,8','40,0%','23,0%','24','-0,2','Baixa',80],
+  ['24','TO','0,7','44,0%','22,0%','22','+0,1','Baixa',80],
+  ['25','AP','0,6','38,0%','20,0%','20','-0,1','Baixa',50],
+  ['26','AC','0,5','40,0%','18,0%','18','0,0','Baixa',50],
+  ['27','RR','0,4','42,0%','18,0%','16','-0,2','Baixa',40]
+];
+
+(function() {
+  var el = document.getElementById('table-ranking-bu');
+  if (!el) return;
+  var totalLeads = rankBuData.reduce(function(s, r) { return s + (r[8] || 0); }, 0);
+  var h = '<table class="compact-table"><thead><tr><th>#</th><th>BU</th><th>ISC</th><th>IE</th><th>Cobertura</th><th>NPS</th><th>Variação</th><th>Leads Base</th><th>% Repres.</th></tr></thead><tbody>';
+  for (var i = 0; i < rankBuData.length; i++) {
+    var r = rankBuData[i];
+    var isc = parseFloat(r[2].replace(',','.'));
+    var iscCls = isc > 4 ? 'badge badge-green' : (isc >= 1 ? 'badge badge-amber' : 'badge badge-red');
+    var leads = r[8];
+    var pct = (leads / totalLeads * 100).toFixed(1);
+    var leadsLabel = leads >= 1000 ? (leads / 1000).toFixed(1) + 'M' : leads + 'k';
+    h += '<tr><td>' + r[0] + '</td><td><strong>' + r[1] + '</strong></td><td><span class="' + iscCls + '" style="font-weight:600;">' + r[2] + '</span></td><td>' + r[3] + '</td><td>' + r[4] + '</td><td>' + r[5] + '</td><td>' + r[6] + '</td><td>' + leadsLabel + '</td><td>' + pct + '%</td></tr>';
+  }
+  h += '</tbody></table>';
+  el.innerHTML = h;
+})();
+</script>
+</body>
+</html>

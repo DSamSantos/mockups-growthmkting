@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sebrae BI — Segments & Journeys</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="_shared/design-system.css">
+<style>
+.sub-nav { display:flex; gap:4px; margin-bottom:20px; background:var(--white); border:1px solid var(--gray-20); border-radius:var(--radius-md); padding:4px; }
+.sub-nav a { flex:1; text-align:center; padding:10px 16px; border-radius:var(--radius-sm); font-size:var(--fs-sm); font-weight:500; color:var(--gray-50); text-decoration:none; transition:all 0.15s; }
+.sub-nav a:hover { background:var(--gray-05); color:var(--gray-70); }
+.sub-nav a.active { background:var(--blue-60); color:var(--white); font-weight:600; }
+.section-title { margin-bottom:8px; margin-top:8px; }
+.section-title span:first-child { font-size:var(--fs-sm);font-weight:600;color:var(--gray-50);letter-spacing:0.5px;text-transform:uppercase; }
+.section-title span:last-child { font-size:var(--fs-xs);color:var(--gray-40);margin-left:8px; }
+@media (max-width:1024px) { .sub-nav { flex-direction:column; } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">S</div>
+    <h1>Sebrae BI</h1>
+    <span class="badge">TO-BE</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="Home.html">
+      <span class="icon" data-lucide="layout-dashboard"></span>
+      Home
+    </a>
+    <a class="nav-item active" href="D10-D12_executive.html">
+      <span class="icon" data-lucide="bar-chart-3"></span>
+      Painel Estratégico
+    </a>
+    <a class="nav-item" href="DC_Contratos.html">
+      <span class="icon" data-lucide="file-text"></span>
+      Dash Contratos
+    </a>
+    <a class="nav-item" href="Base_de_Leads.html">
+      <span class="icon" data-lucide="route"></span>
+      Base de Leads
+    </a>
+    <a class="nav-item" href="D13_Campanhas.html">
+      <span class="icon" data-lucide="megaphone"></span>
+      Campanhas
+    </a>
+    <a class="nav-item" href="D9_Performance.html">
+      <span class="icon" data-lucide="layers"></span>
+      Performance Multicanal
+    </a>
+  </nav>
+</aside>
+
+<div class="main">
+  <header class="header">
+    <div class="header-left">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <span data-lucide="menu" style="width:22px;height:22px;"></span>
+      </button>
+      <span class="breadcrumb">Sebrae BI / <strong id="pageTitle">Detalhamento</strong></span>
+    </div>
+    <div class="header-right">
+      <span class="phase">Fase 1 — Setup</span>
+      <span>v1.2</span>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page active" id="page-d10-d12">
+      <div class="page-header">
+        <h2>Painel Estratégico</h2>
+        <p>Detalhamento de portfólios, jornada do cliente, RFV e fluxo de avanço/abandono</p>
+      </div>
+
+      <div class="sub-nav">
+        <a href="D10-D12_executive.html">Página 1 — Painel Estratégico</a>
+        <a href="D10-D12_detalhamentos.html" class="active">Página 2 — Detalhamento</a>
+      </div>
+
+      <div class="accordion-story">
+        <div class="accordion-story-header" onclick="toggleAccordion(this)">
+          <div style="font-size:var(--fs-xs);font-weight:600;color:var(--blue-70);text-transform:uppercase;letter-spacing:0.5px;">Storytelling — Detalhamento</div>
+          <span class="toggle-icon">▼</span>
+        </div>
+        <div class="accordion-story-body">
+          <div style="font-size:var(--fs-sm);color:var(--gray-60);line-height:1.5;">
+            <strong>1. Portfólios</strong> — Alocação vs Performance, Posicionamento, CPL, Ticket, ROI.<br>
+            <strong>2. Jornada do Cliente</strong> — 2a Funil e distribuição · 2b Avanço e Abandono · 2c Matriz Carteira.<br>
+            <strong>3. Segmentação RFV</strong> — 8 segmentos Top Performance, etapa por segmento.<br>
+            <strong>4. RFV Completo</strong> — Recência (R), Frequência (F), Atendimentos (V), scores e matrizes.
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding:12px 16px;background:var(--gray-05);border-radius:var(--radius-md);border:1px solid var(--gray-15);align-items:center;">
+        <span style="font-size:var(--fs-xs);font-weight:600;color:var(--gray-50);text-transform:uppercase;letter-spacing:0.5px;">Filtros:</span>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>Perfil: Todos</option><option>MEI</option><option>ME/EPP</option><option>Informal</option><option>Produtor Rural</option></select>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>Setor/Segmento: Todos</option><option>Comércio</option><option>Serviços</option><option>Indústria</option><option>Agropecuária</option></select>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>Produto: Todos</option><option>Consultoria</option><option>Capacitação</option><option>Crédito</option><option>Cursos</option><option>Sol. Digitais</option><option>Estruturantes</option></select>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>Segmento RFV: Todos</option><option>Diamante</option><option>Ouro</option><option>Prata</option><option>Bronze</option><option>Atenção</option><option>Risco</option><option>Inativo</option><option>Novatos</option></select>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>Canal: Todos</option><option>WhatsApp</option><option>Email</option><option>SMS</option></select>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>Região: Todas</option><option>Norte</option><option>Nordeste</option><option>Centro-Oeste</option><option>Sul</option><option>Sudeste</option></select>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>UF: Todas</option><option>SP</option><option>MG</option><option>RJ</option><option>RS</option><option>BA</option><option>PR</option><option>SC</option><option>PE</option><option>CE</option><option>GO</option><option>outras</option></select>
+        <select style="padding:6px 10px;border:1px solid var(--gray-20);border-radius:6px;font-size:var(--fs-sm);background:white;color:var(--gray-60);"><option>Período: Últimos 12 meses</option><option>Últimos 6 meses</option><option>Último trimestre</option><option>YTD</option></select>
+      </div>
+
+      <!-- ════════════ 1. PORTFÓLIOS ════════════ -->
+      <div class="section-title"><span>1. Portfólios</span><span>Alocação vs Performance, Posicionamento, CPL, Ticket, ROI</span></div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="label">Esforço Total (YTD)</div>
+          <div class="value">R$ 8,2M</div>
+          <div class="change up"><span class="trend-icon">↑</span>12,4% vs. período anterior</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">CPL Médio</div>
+          <div class="value">R$ 5,80</div>
+          <div class="change down"><span class="trend-icon">↓</span>Meta: R$ 5,00</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">CAC Médio</div>
+          <div class="value">R$ 247</div>
+          <div class="change up"><span class="trend-icon">↑</span>-3,2% vs. trim. anterior</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">ROI Geral</div>
+          <div class="value" style="color:var(--green);">324%</div>
+          <div class="change up"><span class="trend-icon">↑</span>+28 p.p. vs. período anterior</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Ticket Médio Geral</div>
+          <div class="value">R$ 847</div>
+          <div class="change up"><span class="trend-icon">↑</span>4,3% vs. trim. anterior</div>
+        </div>
+      </div>
+
+      <div class="section-title"><span>1a. Alocação vs Performance</span><span>Share de Voz + ISC · Cobertura + Atendimentos</span></div>
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Share de Voz</span>
+            <span class="card-subtitle">Esforço por produto</span>
+          </div>
+          <div class="chart-container chart-container-sm" id="chart-share-voz"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">ISC por Portfólio</span>
+            <span class="card-subtitle">Índice por produto</span>
+          </div>
+          <div class="chart-container chart-container-sm" id="chart-isc-portfolio"></div>
+        </div>
+      </div>
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Cobertura</span>
+            <span class="card-subtitle">% da base contactada</span>
+          </div>
+          <div class="chart-container chart-container-sm" id="chart-cobertura-produto"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Atendimentos</span>
+            <span class="card-subtitle">Leads gerados por produto</span>
+          </div>
+          <div class="chart-container chart-container-sm" id="chart-atendimentos-produto"></div>
+        </div>
+      </div>
+
+      <div class="section-title"><span>1b. Posicionamento Estratégico</span><span>Matriz ISC × Cobertura, Atendimentos × Cobertura</span></div>
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Matriz ISC × Cobertura</span>
+            <span class="card-subtitle">Bolha = esforço · Quadrantes de prioridade</span>
+          </div>
+          <div class="chart-container chart-container-lg" id="chart-receita-portfolio"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Atendimentos × Cobertura</span>
+            <span class="card-subtitle">Bolha = ROI · Alcance vs leads</span>
+          </div>
+          <div class="chart-container chart-container-lg" id="chart-atendimentos-cobertura"></div>
+        </div>
+      </div>
+
+      <div class="section-title"><span>1c. Eficiência de Custos</span><span>CPL evolução + comparativo por produto</span></div>
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">CPL — Evolução Temporal</span>
+            <span class="card-subtitle">Custo por lead vs. meta R$ 5,00</span>
+          </div>
+          <div class="chart-container" id="chart-ticket-portfolio"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">CPL por Produto</span>
+            <span class="card-subtitle">ISC · CPL · Cobertura vs meta</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead><tr><th>Produto</th><th>ISC</th><th>CPL</th><th>Cobertura</th><th>Meta CPL</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Consultoria</td><td>3,3</td><td>R$ 6,20</td><td>48%</td><td>R$ 5,00</td><td><span class="badge badge-red">Atenção</span></td></tr>
+                <tr><td>Capacitação</td><td>2,8</td><td>R$ 4,80</td><td>52%</td><td>R$ 5,00</td><td><span class="badge badge-green">OK</span></td></tr>
+                <tr><td>Crédito</td><td>3,8</td><td>R$ 7,50</td><td>38%</td><td>R$ 5,00</td><td><span class="badge badge-red">Atenção</span></td></tr>
+                <tr><td>Cursos</td><td>2,0</td><td>R$ 3,90</td><td>45%</td><td>R$ 5,00</td><td><span class="badge badge-green">OK</span></td></tr>
+                <tr><td>Sol. Digitais</td><td>1,5</td><td>R$ 5,50</td><td>28%</td><td>R$ 5,00</td><td><span class="badge badge-amber">Próximo</span></td></tr>
+                <tr><td>Estruturantes</td><td>1,2</td><td>R$ 6,80</td><td>22%</td><td>R$ 5,00</td><td><span class="badge badge-red">Atenção</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:12px;padding:10px 16px;background:#FFF3E0;border:1px solid #FFDCA8;border-radius:8px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;">📋</span>
+            <div style="font-size:var(--fs-xs);color:var(--gray-60);line-height:1.5;">
+              <strong>Regra:</strong> CPL ≤ R$ 5,00 = OK · R$ 5,01–6,00 = Próximo · &gt; R$ 6,00 = Atenção
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title"><span>1d. Ticket Médio</span><span>Valor médio contratado por perfil e produto</span></div>
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Ticket Médio por Perfil</span>
+          </div>
+          <div class="chart-container" id="chart-ticket-perfil"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Ticket Médio por Produto</span>
+          </div>
+          <div class="chart-container" id="chart-ticket-produto"></div>
+        </div>
+      </div>
+
+
+
+      <!-- ════════════ 2. JORNADA DO CLIENTE ════════════ -->
+      <div class="section-title" style="margin-top:24px;"><span>2. Jornada do Cliente</span><span>Funil, distribuição por etapa/perfil, matriz carteira</span></div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="label">Base Total na Jornada</div>
+          <div class="value">12,4M</div>
+          <div class="sub">Empreendedores mapeados</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Taxa de Avanço Média</div>
+          <div class="value">61,5%</div>
+          <div class="change up"><span class="trend-icon">↑</span>+2,3 p.p. vs trim. anterior</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Drop-Off Médio</div>
+          <div class="value" style="color:var(--red);">38,5%</div>
+          <div class="sub">Maior abandono em Interesse→Consideração</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Tempo Médio Jornada</div>
+          <div class="value">47 dias</div>
+          <div class="sub">Descoberta → Pós-Venda</div>
+        </div>
+      </div>
+
+      <div class="section-title"><span>2a. Mapa da Jornada</span><span>Funil e distribuição por perfil</span></div>
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Funil da Jornada</span>
+            <span class="card-subtitle">Volume de leads por estágio</span>
+          </div>
+          <div class="chart-container chart-container-lg" id="chart-funil-jornada"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Distribuição por Etapa — Perfil</span>
+            <span class="card-subtitle">Barras empilhadas — valores em milhares</span>
+          </div>
+          <div class="chart-container-lg" id="chart-etapa-jornada"></div>
+        </div>
+      </div>
+
+      <!-- ════════════ 2b. AVANÇO E ABANDONO ════════════ -->
+      <div class="section-title" style="margin-top:24px;"><span>2b. Avanço e Abandono</span><span>Sankey de fluxo entre etapas · Drop-off por etapa×produto</span></div>
+
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Taxa de Avanço entre Etapas</span>
+            <span class="card-subtitle">Sankey — fluxo absoluto e % de conversão</span>
+          </div>
+          <div class="chart-container chart-container-lg" id="chart-taxa-avanco"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Abandono por Etapa e Produto</span>
+            <span class="card-subtitle">Drop-off rate % — (1 − progrediram / total) × 100</span>
+          </div>
+          <div class="chart-container chart-container-lg" id="chart-abandono-etapa"></div>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:24px;"><span>2c. Matriz Carteira</span><span>Heatmap — coorte (mês de entrada) vs etapa atual</span></div>
+      <div class="row">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Matriz Carteira por Etapa vs Mês de Entrada</span>
+            <span class="card-subtitle">% de leads de cada coorte que permanecem na respectiva etapa</span>
+          </div>
+          <div class="chart-container chart-container-lg" id="chart-matriz-carteira"></div>
+        </div>
+      </div>
+
+      <!-- ════════════ 3. SEGMENTAÇÃO RFV ════════════ -->
+      <div class="section-title" style="margin-top:24px;"><span>3. Segmentação RFV</span><span>8 segmentos Top Performance — Diamante a Novatos</span></div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="label">Base Total (RFV)</div>
+          <div class="value">12,4M</div>
+          <div class="sub">Empreendedores na base</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Diamante (R↑ F↑ V↑)</div>
+          <div class="value">1,2M</div>
+          <div class="change up">9,7% da base</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Ouro (R↑ F↑ V↕)</div>
+          <div class="value">1,8M</div>
+          <div class="change up">14,5% da base</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Inativos (R↓ F↓ V↓)</div>
+          <div class="value">3,1M</div>
+          <div class="change down">25,0% da base</div>
+        </div>
+      </div>
+
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Distribuição RFV</span>
+            <span class="card-subtitle">Base por segmento Top Performance</span>
+          </div>
+          <div class="chart-container" id="chart-rfv-distribution"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Etapa na Jornada × Segmento RFV</span>
+            <span class="card-subtitle">Bolha = volume de leads</span>
+          </div>
+          <div class="chart-container" id="chart-etapa-segmento"></div>
+        </div>
+      </div>
+
+      <!-- ════════════ 4. RFV COMPLETO ════════════ -->
+      <div class="section-title" style="margin-top:24px;"><span>4. RFV Completo (R+F+V)</span><span>Recência, Frequência, Atendimentos — as 3 dimensões da maturação</span></div>
+
+      <div style="background:#EDF7F0;border:1px solid #A8D8B9;border-radius:10px;padding:14px 18px;margin-bottom:12px;display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:var(--fs-sm);font-weight:600;color:var(--teal);letter-spacing:0.3px;">RFV na prática da jornada empreendedora</div>
+        <div style="font-size:var(--fs-xs);color:var(--gray-60);line-height:1.6;">
+          <strong>R</strong> = Quem interagiu recentemente? → Base aquecida (score 1–5)<br>
+          <strong>F</strong> = Quem participa com regularidade? → Público engajado (score 1–5)<br>
+          <strong>V</strong> = Quem já foi atendido? → Lead com serviço consumido (score 1–5)<br>
+          <strong>Score composto</strong> = R×0,2 + F×0,3 + V×0,5 → visão unificada do estágio de maturação
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">R/F/V — Score por Perfil</span>
+            <span class="card-subtitle">Recência (R) · Frequência (F) · Atendimentos (V) — escala 1-5</span>
+          </div>
+          <div style="overflow-x:auto;max-height:320px;overflow-y:auto;">
+            <table class="compact-table">
+              <thead><tr><th>Perfil</th><th>R — Recência</th><th>F — Frequência</th><th>V — Atendimentos</th></tr></thead>
+              <tbody id="rfv-score-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <script>
+      (function() {
+        var el = document.getElementById('rfv-score-table');
+        if (!el) return;
+        var data = [
+          { perfil: 'ME', r: 4.5, f: 4.1, v: 4.2 },
+          { perfil: 'EPP', r: 3.8, f: 3.6, v: 3.8 },
+          { perfil: 'MEI', r: 3.2, f: 2.6, v: 3.2 },
+          { perfil: 'Prod. Rural', r: 3.0, f: 2.2, v: 2.5 },
+          { perfil: 'Informal', r: 2.5, f: 1.3, v: 2.0 }
+        ];
+        function bar(score) {
+          var pct = Math.round(score / 5 * 100);
+          var c = pct >= 75 ? '#2E7D32' : (pct >= 50 ? '#FF9400' : '#C62828');
+          return '<div style="display:flex;align-items:center;gap:6px;"><div class="progress-bar" style="flex:1;height:14px;background:#E8E8E8;border-radius:7px;overflow:hidden;"><div class="progress-fill" style="width:' + pct + '%;height:100%;background:' + c + ';border-radius:7px;"></div></div><span style="font-weight:600;font-size:var(--fs-xs);color:' + c + ';min-width:30px;text-align:right;">' + score.toFixed(1) + '</span></div>';
+        }
+        var h = '';
+        for (var i = 0; i < data.length; i++) {
+          var d = data[i];
+          h += '<tr><td style="font-weight:600;font-size:var(--fs-xs);color:var(--gray-60);">' + d.perfil + '</td>' +
+            '<td>' + bar(d.r) + '</td>' +
+            '<td>' + bar(d.f) + '</td>' +
+            '<td>' + bar(d.v) + '</td></tr>';
+        }
+        el.innerHTML = h;
+      })();
+      </script>
+
+      <div class="section-title"><span>Score RFV Composto (escala 1-5)</span><span>R×0,2 + F×0,3 + V×0,5 — maturação por dimensão</span></div>
+      <div class="row col-3">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Score Composto — Perfil</span>
+          </div>
+          <div class="chart-container" id="chart-score-perfil"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Score Composto — Segmento</span>
+          </div>
+          <div class="chart-container" id="chart-score-segmento"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Score Composto — Produto</span>
+          </div>
+          <div class="chart-container" id="chart-score-produto"></div>
+        </div>
+      </div>
+
+      <div class="section-title"><span>Matriz R×F — Recência vs Atividade</span><span>R (eixo X) × F (eixo Y) — cor = V (Atendimentos)</span></div>
+      <div class="row col-3">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">R×F — Perfil</span>
+          </div>
+          <div class="chart-container" id="chart-scatter-perfil"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">R×F — Segmento</span>
+          </div>
+          <div class="chart-container" id="chart-scatter-segmento"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">R×F — Produto</span>
+          </div>
+          <div class="chart-container" id="chart-scatter-produto"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="_shared/framework.js"></script>
+<script>
+// ── Charts NOT in framework.js ──
+
+// Funil da Jornada (funnel)
+initChart('chart-funil-jornada', {
+  tooltip: { trigger: 'item', formatter: function(p) { return p.name + '<br/>' + p.value.toLocaleString() + ' leads (' + p.percent + '%)'; } },
+  series: [{
+    type: 'funnel',
+    left: '10%', top: 20, bottom: 20,
+    sort: 'descending',
+    gap: 4,
+    label: { show: true, formatter: function(p) { return p.name + '\n' + p.value.toLocaleString(); }, fontSize: 12, color: '#2D2D2D' },
+    data: [
+      { value: 12400, name: 'Descoberta', itemStyle: { color: '#80BCFF' } },
+      { value: 8200, name: 'Interesse', itemStyle: { color: '#45A1FF' } },
+      { value: 5400, name: 'Consideração', itemStyle: { color: '#0080FF' } },
+      { value: 3600, name: 'Conversão', itemStyle: { color: '#0060DF' } },
+      { value: 2100, name: 'Pós-Venda', itemStyle: { color: '#0045A3' } }
+    ]
+  }]
+});
+
+// Matriz Carteira (coorte heatmap)
+var meses = ['Jan/25','Fev/25','Mar/25','Abr/25','Mai/25','Jun/25','Jul/25','Ago/25','Set/25','Out/25','Nov/25','Dez/25'];
+var etapas = ['Descoberta','Interesse','Consideração','Conversão','Pós-Venda'];
+var coorteData = [];
+for (var mi = 0; mi < meses.length; mi++) {
+  for (var ei = 0; ei < etapas.length; ei++) {
+    var pct = Math.max(5, Math.min(95, 70 - (mi * 1.5) - (ei * 8) + (Math.random() * 12 - 6)));
+    coorteData.push([ei, mi, Math.round(pct)]);
+  }
+}
+initChart('chart-matriz-carteira', {
+  tooltip: { position: 'top', formatter: function(p) { return 'Coorte: ' + meses[p.data[1]] + '<br/>Etapa: ' + etapas[p.data[0]] + '<br/>Permanência: <b>' + p.data[2] + '%</b>'; } },
+  grid: { top: 10, right: 40, bottom: 80, left: 60 },
+  xAxis: { type: 'category', data: etapas, axisLabel: { fontSize: 11, rotate: 30 }, splitArea: { show: true } },
+  yAxis: { type: 'category', data: meses, axisLabel: { fontSize: 9 }, splitArea: { show: true } },
+  visualMap: { min: 5, max: 95, calculable: true, orient: 'vertical', right: 0, top: 'center', inRange: { color: ['#E8E8E8','#D0E5F5','#80BCFF','#0080FF','#0045A3'] } },
+  series: [{ type: 'heatmap', data: coorteData, label: { show: true, formatter: function(p) { return p.data[2] + '%'; }, fontSize: 9, color: '#1C1C1C' } }]
+});
+
+
+
+// Abandono por Etapa e Produto (heatmap)
+var prodEtapas = ['Descoberta', 'Interesse', 'Consideração', 'Conversão', 'Pós-Venda'];
+var prodNomes = ['Estruturantes', 'Sol. Digitais', 'Cursos', 'Capacitação', 'Consultoria', 'Crédito'];
+var abandData = [];
+for (var pi = 0; pi < prodNomes.length; pi++) {
+  for (var ei2 = 0; ei2 < prodEtapas.length; ei2++) {
+    var abPct = Math.round(30 - (pi * 3) + (ei2 * 4) + (Math.random() * 10 - 5));
+    abandData.push([ei2, pi, Math.max(3, Math.min(45, abPct))]);
+  }
+}
+initChart('chart-abandono-etapa', {
+  tooltip: { position: 'top', formatter: function(p) { return prodNomes[p.data[1]] + ' × ' + prodEtapas[p.data[0]] + '<br/>Drop-off: <b>' + p.data[2] + '%</b>'; } },
+  grid: { top: 10, right: 20, bottom: 75, left: 100 },
+  xAxis: { type: 'category', data: prodEtapas, axisLabel: { fontSize: 11 }, splitArea: { show: true } },
+  yAxis: { type: 'category', data: prodNomes, axisLabel: { fontSize: 11 }, splitArea: { show: true } },
+  visualMap: { min: 3, max: 45, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, inRange: { color: ['#E8F5E9', '#FFF9C4', '#FFE082', '#FF8A65', '#E53935'] } },
+  series: [{
+    type: 'heatmap',
+    data: abandData,
+    label: { show: true, formatter: function(p) { return p.data[2] + '%'; }, fontSize: 9, color: '#1C1C1C' }
+  }]
+});
+</script>
+</body>
+</html>
